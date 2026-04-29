@@ -106,14 +106,3 @@ Dirigido al equipo de operaciones de NorthPay:
 - Eliminación de procesos manuales y dispersos
 
 ---
-
-## Posible Stack Tecnológico
-
-*(Opcional, puedes ajustarlo según tu implementación)*
-
-- Frontend: React / Next.js
-- Backend: Node.js / Laravel
-- Base de datos: PostgreSQL / MongoDB
-- Autenticación: JWT / OAuth
-- Firma digital: integración con proveedor externo
-- Notificaciones: Email / SMS / Webhooks
