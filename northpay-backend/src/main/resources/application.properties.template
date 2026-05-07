@@ -1,0 +1,8 @@
+# CONFIGURACIÓN DE MONGODB
+spring.data.mongodb.uri=mongodb+srv://admin:NorthPay2026@northpay-cluster.3pborqz.mongodb.net/northpay_db?retryWrites=true&w=majority
+spring.data.mongodb.database=northpay_db
+
+# CONFIGURACIÓN DE CLOUDINARY
+cloudinary.cloud_name=dotfh4knc
+cloudinary.api_key=542592939381235
+cloudinary.api_secret=vwfamwPAeo7JoDub9CMJDBueGSI
