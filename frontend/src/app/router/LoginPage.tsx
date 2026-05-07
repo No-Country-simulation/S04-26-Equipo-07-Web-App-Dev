@@ -38,7 +38,7 @@ const handleSubmit = async (e: React.FormEvent) => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-zinc-50 px-4">
-      <div className="w-full max-w-md rounded-2xl border bg-white p-8 shadow-sm">
+      <div className="w-full max-w-md rounded-2xl border bg-secondary p-8 shadow-sm">
 
         <div className="mb-6 space-y-2 text-center">
           <h1 className="text-3xl font-bold tracking-tight">
