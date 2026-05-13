@@ -1,4 +1,4 @@
-package com.example.northpay_backend;
+package com.northpay.backend;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

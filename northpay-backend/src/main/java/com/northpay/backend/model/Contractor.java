@@ -21,4 +21,8 @@ public class Contractor {
     private Map<String, String> documents = new HashMap<>();
 
     private boolean contractSigned = false;
+
+    // Aquí guardaremos los detalles del método de pago
+    // Ejemplo: {"bankName": "BCP", "accountNumber": "123456789", "type": "Ahorros"}
+    private Map<String, String> paymentMethod = new HashMap<>();
 }
