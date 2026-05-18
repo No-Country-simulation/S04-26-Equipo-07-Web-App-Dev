@@ -29,7 +29,7 @@ const handleSubmit = async (e: React.FormEvent) => {
 
       navigate("/admin")
     } else {
-      setError("Invalid credentials")
+      setError("Credenciales inválidas. Intenta nuevamente.")
     }
 
     setLoading(false)
