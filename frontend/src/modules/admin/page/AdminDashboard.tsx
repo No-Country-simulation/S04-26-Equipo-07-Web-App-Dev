@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { fetchUsers } from '@/lib/api/users'
-import Header from '@/components/common/Header'
+
 
 function AdminDashboard() {
   const { data = [], isLoading, isError } = useQuery({
@@ -21,8 +21,7 @@ function AdminDashboard() {
 
   return (
     <main className="min-h-screen bg-linear-to-b from-zinc-50 to-white p-4 md:p-10">
-      <Header />
-      <div className="mx-auto max-w-6xl">
+       <div className="mx-auto max-w-6xl">
         <Card>
           <CardHeader>
             <CardTitle>Primera vista test</CardTitle>
