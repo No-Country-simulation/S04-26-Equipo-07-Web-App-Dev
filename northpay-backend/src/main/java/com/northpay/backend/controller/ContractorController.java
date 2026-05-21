@@ -11,6 +11,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping("/api/contractors")
 public class ContractorController {
@@ -20,7 +22,7 @@ public class ContractorController {
 
     // 1. Iniciar onboarding (Datos Personales)
     @PostMapping
-    public ResponseEntity<Contractor> createContractor(@RequestBody Contractor contractor) {
+    public ResponseEntity<Contractor> createContractor(@Valid @RequestBody Contractor contractor) {
         return ResponseEntity.ok(contractorService.createContractor(contractor));
     }
 

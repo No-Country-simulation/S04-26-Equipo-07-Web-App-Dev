@@ -2,6 +2,7 @@ package com.northpay.backend.service;
 
 import com.northpay.backend.model.Contractor;
 import com.northpay.backend.repository.ContractorRepository;
+import com.northpay.backend.exception.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -36,7 +37,7 @@ public class ContractorService {
             contractor.getDocuments().put(documentType, fileUrl);
             return contractorRepository.save(contractor);
         }
-        throw new RuntimeException("Contratista no encontrado con id: " + id);
+        throw new ResourceNotFoundException("Contratista no encontrado con id: " + id);
     }
 
     // 3. Firmar contrato digital
@@ -47,7 +48,7 @@ public class ContractorService {
             contractor.setContractSigned(true);
             return contractorRepository.save(contractor);
         }
-        throw new RuntimeException("Contratista no encontrado con id: " + id);
+        throw new ResourceNotFoundException("Contratista no encontrado con id: " + id);
     }
 
     // 4. Configuración del método de pago y cambio de estado
@@ -64,13 +65,13 @@ public class ContractorService {
             System.out.println("Enviando notificación: Etapas completadas. Pendiente de verificación interna para " + contractor.getEmail());
             return contractorRepository.save(contractor);
         }
-        throw new RuntimeException("Contratista no encontrado con id: " + id);
+        throw new ResourceNotFoundException("Contratista no encontrado con id: " + id);
     }
 
     // Obtener contratista por ID
     public Contractor getContractor(String id) {
         return contractorRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Contratista no encontrado con id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Contratista no encontrado con id: " + id));
     }
 
     // Listar todos los contratistas (Panel Admin)
@@ -89,6 +90,6 @@ public class ContractorService {
             
             return contractorRepository.save(contractor);
         }
-        throw new RuntimeException("Contratista no encontrado con id: " + id);
+        throw new ResourceNotFoundException("Contratista no encontrado con id: " + id);
     }
 }
