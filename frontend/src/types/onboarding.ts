@@ -2,13 +2,13 @@ export type PersonalInfo = {
   fullName: string
   email: string
   phone: string
+  phoneCode: string
   dateOfBirth: string
   address: string
   city: string
   state: string
   zipCode: string
   country: string
-  taxId: string
 }
 
 export type OnboardingDocument = {
