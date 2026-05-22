@@ -43,7 +43,7 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
               end={item.to === "/admin"}
               onClick={onClose}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-3 font-mono text-[12px] uppercase tracking-wider transition-all duration-200 ${
+                `flex items-center gap-3 px-4 py-3 font-mono text-caption-mono uppercase tracking-wider transition-all duration-200 ${
                   isActive
                     ? "border-l-4 border-[#42ff00] bg-[#42ff00]/10 text-[#f0ffe4]"
                     : "border-l-4 border-transparent text-[#baccaf] hover:bg-[#232d1e] hover:text-[#dae6d0]"
@@ -59,7 +59,7 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
         <div className="px-4">
           <button
             onClick={() => { navigate("/admin/pending"); onClose() }}
-            className="flex w-full items-center justify-center gap-2 bg-[#42ff00] py-3 font-mono text-[12px] font-bold uppercase tracking-wider text-[#083900] transition-all hover:brightness-110 active:scale-95"
+            className="flex w-full items-center justify-center gap-2 bg-[#42ff00] py-3 font-mono text-caption-mono font-bold uppercase tracking-wider text-[#083900] transition-all hover:brightness-110 active:scale-95"
           >
             <FileCheck size={16} />
             Revisar Cola
@@ -67,17 +67,17 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
 
           <button
             onClick={() => { logout(); navigate("/login") }}
-            className="mt-4 flex w-full items-center justify-center gap-2 border border-[#ffb4ab] py-3 font-mono text-[12px] uppercase tracking-wider text-[#ffb4ab] transition-all hover:bg-[#ffb4ab]/20 active:scale-95"
+            className="mt-4 flex w-full items-center justify-center gap-2 border border-[#ffb4ab] py-3 font-mono text-caption-mono uppercase tracking-wider text-[#ffb4ab] transition-all hover:bg-[#ffb4ab]/20 active:scale-95"
           >
             Cerrar Sesión
           </button>
 
           <div className="mt-6 flex items-center gap-3 border-t border-[#3c4b35] px-2 py-4">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full border border-[#42ff00]/30 bg-[#232d1e] font-mono text-[12px] text-[#42ff00]">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full border border-[#42ff00]/30 bg-[#232d1e] font-mono text-caption-mono text-[#42ff00]">
               OR
             </div>
             <div>
-              <p className="font-mono text-[12px] font-bold text-[#dae6d0]">OPS_ROOT</p>
+              <p className="font-mono text-caption-mono font-bold text-[#dae6d0]">OPS_ROOT</p>
               <p className="font-mono text-[10px] uppercase tracking-wider text-[#baccaf]">Admin del Sistema</p>
             </div>
           </div>
