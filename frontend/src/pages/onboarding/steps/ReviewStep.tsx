@@ -16,11 +16,10 @@ export default function ReviewStep() {
       <Section title="Información Personal">
         <Row label="Nombre" value={personalInfo.fullName} />
         <Row label="Email" value={personalInfo.email} />
-        <Row label="Teléfono" value={personalInfo.phone} />
+        <Row label="Teléfono" value={`${personalInfo.phoneCode} ${personalInfo.phone}`} />
         <Row label="Fecha de Nacimiento" value={personalInfo.dateOfBirth} />
         <Row label="Dirección" value={`${personalInfo.address}, ${personalInfo.city}, ${personalInfo.state}, ${personalInfo.zipCode}`} />
         <Row label="País" value={personalInfo.country} />
-        <Row label="RFC / Tax ID" value={personalInfo.taxId} />
       </Section>
 
       <Section title="Documentos">
