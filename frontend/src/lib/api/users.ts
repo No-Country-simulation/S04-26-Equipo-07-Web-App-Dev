@@ -1,6 +1,7 @@
 import { z } from 'zod'
 
 import { apiClient } from '@/lib/api/client'
+import { API } from '@/lib/api/config'
 import type { User } from '@/types/user'
 
 const userSchema = z.object({
@@ -18,6 +19,6 @@ const userSchema = z.object({
 const usersSchema = z.array(userSchema)
 
 export async function fetchUsers(): Promise<User[]> {
-  const { data } = await apiClient.get('/users')
+  const { data } = await apiClient.get(API.users)
   return usersSchema.parse(data)
 }
