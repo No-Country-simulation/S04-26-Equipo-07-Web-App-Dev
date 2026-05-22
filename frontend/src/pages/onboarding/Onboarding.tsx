@@ -7,6 +7,8 @@ import ReviewStep from "./steps/ReviewStep"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import { useState } from "react"
+import { personalInfoSchema, contractSchema, paymentSchema } from "@/stores/onboardingSchemas"
+import { submitOnboarding } from "@/lib/api/onboarding"
 
 const steps = [
   { id: 0, label: "Personal", description: "Información personal" },
@@ -26,7 +28,7 @@ const stepComponents = [
 
 function OnboardingContent() {
   const navigate = useNavigate()
-  const { currentStep, setCurrentStep, data } = useOnboarding()
+  const { currentStep, setCurrentStep, data, resetOnboarding } = useOnboarding()
   const [submitting, setSubmitting] = useState(false)
 
   const { personalInfo, documents, contract, payment } = data
@@ -35,13 +37,13 @@ function OnboardingContent() {
   const isStepValid = () => {
     switch (currentStep) {
       case 0:
-        return !!personalInfo.fullName && !!personalInfo.email && !!personalInfo.taxId
+        return personalInfoSchema.safeParse(personalInfo).success
       case 1:
         return allDocsUploaded
       case 2:
-        return contract.accepted && !!contract.signature
+        return contractSchema.safeParse(contract).success
       case 3:
-        return !!payment.bankName && !!payment.accountNumber
+        return paymentSchema.safeParse(payment).success
       case 4:
         return true
       default:
@@ -52,12 +54,16 @@ function OnboardingContent() {
   const canGoNext = isStepValid()
   const isLastStep = currentStep === steps.length - 1
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (isLastStep) {
       setSubmitting(true)
-      setTimeout(() => {
+      try {
+        await submitOnboarding(data)
+        resetOnboarding()
         navigate("/onboarding/success")
-      }, 800)
+      } catch {
+        setSubmitting(false)
+      }
       return
     }
     setCurrentStep(currentStep + 1)
