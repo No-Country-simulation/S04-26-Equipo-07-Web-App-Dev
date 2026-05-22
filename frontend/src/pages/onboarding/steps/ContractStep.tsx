@@ -1,14 +1,48 @@
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
 import { useOnboarding } from "@/modules/onboarding/hooks/useOnboarding"
+import { contractSchema } from "@/stores/onboardingSchemas"
+import { useState, useCallback } from "react"
+
+type FieldErrors = Record<string, string>
 
 export default function ContractStep() {
   const { data, acceptContract } = useOnboarding()
   const { contract } = data
+  const [errors, setErrors] = useState<FieldErrors>({})
+  const [touched, setTouched] = useState<Record<string, boolean>>({})
+
+  const validate = useCallback(() => {
+    const result = contractSchema.safeParse(contract)
+    if (result.success) {
+      setErrors({})
+      return true
+    }
+    const fieldErrors: FieldErrors = {}
+    for (const issue of result.error.issues) {
+      const path = issue.path[0] as string
+      if (!fieldErrors[path]) fieldErrors[path] = issue.message
+    }
+    setErrors(fieldErrors)
+    return false
+  }, [contract])
+
+  const handleBlur = (field: string) => {
+    setTouched((prev) => ({ ...prev, [field]: true }))
+    validate()
+  }
 
   const handleAcceptChange = (checked: boolean) => {
     if (!checked) return
     acceptContract(data.personalInfo.fullName || "Firmante")
+    setTouched((prev) => ({ ...prev, accepted: true }))
+    setTimeout(validate, 0)
+  }
+
+  const handleSignatureChange = (value: string) => {
+    if (contract.accepted) return
+    acceptContract(value)
+    if (touched.signature) validate()
   }
 
   return (
@@ -72,29 +106,35 @@ export default function ContractStep() {
         </label>
         <Input
           value={contract.signature || data.personalInfo.fullName}
-          onChange={(e) => {
-            if (contract.accepted) return
-            acceptContract(e.target.value)
-          }}
+          onChange={(e) => handleSignatureChange(e.target.value)}
+          onBlur={() => handleBlur("signature")}
           placeholder="Escribe tu nombre completo como firma"
           className="font-display text-lg tracking-wide"
         />
+        {touched.signature && errors.signature && (
+          <p className="font-caption-mono text-caption-mono text-color-warning">{errors.signature}</p>
+        )}
         <p className="font-caption-mono text-caption-mono text-on-surface-variant mt-1">
           Tu nombre escrito constituye tu firma electrónica vinculante.
         </p>
       </div>
 
-      <label className="flex items-start gap-3 cursor-pointer group">
-        <Checkbox
-          checked={contract.accepted}
-          onCheckedChange={(checked) => handleAcceptChange(checked as boolean)}
-          className="mt-0.5"
-        />
-        <span className="font-body text-body text-on-surface-variant group-hover:text-white transition-colors">
-          He leído y acepto los términos y condiciones del Contrato de Servicios de NorthPay,
-          incluyendo las cláusulas de confidencialidad y cumplimiento fiscal.
-        </span>
-      </label>
+      <div className="space-y-2">
+        <label className="flex items-start gap-3 cursor-pointer group">
+          <Checkbox
+            checked={contract.accepted}
+            onCheckedChange={(checked) => handleAcceptChange(checked as boolean)}
+            className="mt-0.5"
+          />
+          <span className="font-body text-body text-on-surface-variant group-hover:text-white transition-colors">
+            He leído y acepto los términos y condiciones del Contrato de Servicios de NorthPay,
+            incluyendo las cláusulas de confidencialidad y cumplimiento fiscal.
+          </span>
+        </label>
+        {touched.accepted && errors.accepted && (
+          <p className="font-caption-mono text-caption-mono text-color-warning">{errors.accepted}</p>
+        )}
+      </div>
     </div>
   )
 }
