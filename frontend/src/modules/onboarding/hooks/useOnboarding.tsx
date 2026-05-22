@@ -9,8 +9,8 @@ const defaultDocuments: OnboardingDocument[] = [
 
 const initialData: OnboardingData = {
   personalInfo: {
-    fullName: "", email: "", phone: "", dateOfBirth: "",
-    address: "", city: "", state: "", zipCode: "", country: "México", taxId: "",
+    fullName: "", email: "", phone: "", phoneCode: "+52", dateOfBirth: "",
+    address: "", city: "", state: "", zipCode: "", country: "México",
   },
   documents: defaultDocuments,
   contract: { accepted: false, signature: "", signedAt: null },
