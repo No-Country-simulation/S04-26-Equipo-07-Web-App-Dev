@@ -1,6 +1,7 @@
 import axios from 'axios'
+import { API } from './config'
 
 export const apiClient = axios.create({
-  baseURL: 'https://jsonplaceholder.typicode.com',
+  baseURL: API.baseURL,
   timeout: 10_000,
 })
