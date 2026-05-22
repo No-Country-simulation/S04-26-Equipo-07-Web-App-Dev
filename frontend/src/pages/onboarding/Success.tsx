@@ -15,7 +15,7 @@ export default function Success() {
 
         <p className="font-body text-body text-on-surface-variant mb-12 max-w-md mx-auto">
           Hemos recibido toda tu documentación e información. Nuestro equipo de cumplimiento
-          revisará tus datos y te notificaremos por whatsapp una vez que tu perfil
+          revisará tus datos y te notificaremos por correo eletronico una vez que tu perfil
           esté revisado.
         </p>
 
