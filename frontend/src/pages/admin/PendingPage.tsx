@@ -33,10 +33,10 @@ export default function PendingPage() {
   })
 
   return (
-    <div className="p-[32px]">
+    <div className="p-8">
       <div className="mb-8">
-        <h2 className="text-[28px] font-bold text-[#f0ffe4] md:text-[32px]">Aprobaciones Pendientes</h2>
-        <p className="mt-1 font-mono text-[12px] uppercase tracking-wider text-[#baccaf]">
+        <h2 className="text-[28px] font-bold text-[#f0ffe4] md:text-heading-lg">Aprobaciones Pendientes</h2>
+        <p className="mt-1 font-mono text-caption-mono uppercase tracking-wider text-[#baccaf]">
           {pending.length} contratistas esperando revisión
         </p>
       </div>
@@ -47,7 +47,7 @@ export default function PendingPage() {
             <thead>
               <tr className="bg-[#141e10]">
                 {["Nombre", "País", "Paso", "Documentos", "Tiempo", "Acción"].map((h) => (
-                  <th key={h} className="border-b border-[#3c4b35] px-6 py-4 font-mono text-[12px] uppercase tracking-wider text-[#baccaf]">{h}</th>
+                  <th key={h} className="border-b border-[#3c4b35] px-6 py-4 font-mono text-caption-mono uppercase tracking-wider text-[#baccaf]">{h}</th>
                 ))}
               </tr>
             </thead>
@@ -59,30 +59,30 @@ export default function PendingPage() {
                   <tr key={c.id} className="transition-colors hover:bg-[#42ff00]/5">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="flex h-8 w-8 items-center justify-center border border-[#3c4b35] bg-[#232d1e] font-mono text-[12px] text-[#42ff00]">
+                        <div className="flex h-8 w-8 items-center justify-center border border-[#3c4b35] bg-[#232d1e] font-mono text-caption-mono text-[#42ff00]">
                           {initials(c.fullName)}
                         </div>
                         <div>
-                          <p className="text-[14px] font-bold text-[#dae6d0]">{c.fullName}</p>
+                          <p className="text-body-sm font-bold text-[#dae6d0]">{c.fullName}</p>
                           <p className="font-mono text-[10px] text-[#baccaf]">ID: NP_{String(c.id).padStart(5, "0")}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 font-mono text-[12px] text-[#baccaf]">{c.countryCode}</td>
+                    <td className="px-6 py-4 font-mono text-caption-mono text-[#baccaf]">{c.countryCode}</td>
                     <td className="px-6 py-4">
-                      <span className="border border-[#3c4b35] px-2 py-0.5 font-mono text-[12px] text-[#dae6d0]">
+                      <span className="border border-[#3c4b35] px-2 py-0.5 font-mono text-caption-mono text-[#dae6d0]">
                         {stepLabels[c.step] || c.step}
                       </span>
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
                         <span className={`h-2 w-2 rounded-full ${ok === total ? "bg-[#42ff00]" : "bg-[#ffb4ab]"}`} />
-                        <span className={`font-mono text-[12px] ${ok === total ? "text-[#dae6d0]" : "text-[#ffb4ab]"}`}>
+                        <span className={`font-mono text-caption-monon-mono ${ok === total ? "text-[#dae6d0]" : "text-[#ffb4ab]"}`}>
                           {ok}/{total}
                         </span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 font-mono text-[12px] text-[#baccaf]">{c.timeInQueue}</td>
+                    <td className="px-6 py-4 font-mono text-caption-mono text-[#baccaf]">{c.timeInQueue}</td>
                     <td className="px-6 py-4">
                       <div className="flex gap-2">
                         <button
@@ -119,7 +119,7 @@ export default function PendingPage() {
       {selected && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => setSelected(null)}>
           <div className="w-full max-w-lg border border-[#3c4b35] bg-[#0c1609] p-6" onClick={(e) => e.stopPropagation()}>
-            <h3 className="mb-4 text-[20px] font-bold text-[#f0ffe4]">{selected.fullName}</h3>
+            <h3 className="mb-4 text-heading-sm font-bold text-[#f0ffe4]">{selected.fullName}</h3>
             <div className="space-y-3 text-[13px]">
               {selected.documents.map((doc) => (
                 <div key={doc.name} className="flex items-center justify-between border border-[#3c4b35] px-4 py-2">
@@ -136,7 +136,7 @@ export default function PendingPage() {
                 </div>
               ))}
             </div>
-            <button onClick={() => setSelected(null)} className="mt-4 w-full border border-[#3c4b35] py-2 font-mono text-[12px] uppercase tracking-wider text-[#baccaf] transition-colors hover:border-[#42ff00]">
+            <button onClick={() => setSelected(null)} className="mt-4 w-full border border-[#3c4b35] py-2 font-mono text-caption-mono uppercase tracking-wider text-[#baccaf] transition-colors hover:border-[#42ff00]">
               Cerrar
             </button>
           </div>
