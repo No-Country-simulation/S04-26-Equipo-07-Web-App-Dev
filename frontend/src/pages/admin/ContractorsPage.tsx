@@ -32,11 +32,11 @@ export default function ContractorsPage() {
   )
 
   return (
-    <div className="p-[32px]">
+    <div className="p-8">
       <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h2 className="text-[28px] font-bold text-[#f0ffe4] md:text-[32px]">Todos los Contratistas</h2>
-          <p className="mt-1 font-mono text-[12px] uppercase tracking-wider text-[#baccaf]">
+          <h2 className="text-[28px] font-bold text-[#f0ffe4] md:text-heading-lg">Todos los Contratistas</h2>
+          <p className="mt-1 font-mono text-caption-mono uppercase tracking-wider text-[#baccaf]">
             {data.length} registros en total
           </p>
         </div>
@@ -47,7 +47,7 @@ export default function ContractorsPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Buscar por nombre, email, país..."
-            className="w-56 bg-transparent font-mono text-[12px] text-[#dae6d0] placeholder:text-[#3c4b35] outline-none"
+            className="w-56 bg-transparent font-mono text-caption-mono text-[#dae6d0] placeholder:text-[#3c4b35] outline-none"
           />
         </div>
       </div>
@@ -58,7 +58,7 @@ export default function ContractorsPage() {
             <thead>
               <tr className="bg-[#141e10]">
                 {["Nombre", "Email", "País", "Documentos", "Estado", "Banco"].map((h) => (
-                  <th key={h} className="border-b border-[#3c4b35] px-6 py-4 font-mono text-[12px] uppercase tracking-wider text-[#baccaf]">{h}</th>
+                  <th key={h} className="border-b border-[#3c4b35] px-6 py-4 font-mono text-caption-mono uppercase tracking-wider text-[#baccaf]">{h}</th>
                 ))}
               </tr>
             </thead>
@@ -70,14 +70,14 @@ export default function ContractorsPage() {
                   <tr key={c.id} className="transition-colors hover:bg-[#42ff00]/5">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="flex h-8 w-8 items-center justify-center border border-[#3c4b35] bg-[#232d1e] font-mono text-[12px] text-[#42ff00]">
+                        <div className="flex h-8 w-8 items-center justify-center border border-[#3c4b35] bg-[#232d1e] font-mono text-caption-mono text-[#42ff00]">
                           {initials(c.fullName)}
                         </div>
-                        <span className="text-[14px] font-bold text-[#dae6d0]">{c.fullName}</span>
+                        <span className="text-body-sm font-bold text-[#dae6d0]">{c.fullName}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 font-mono text-[12px] text-[#baccaf]">{c.email}</td>
-                    <td className="px-6 py-4 font-mono text-[12px] text-[#dae6d0]">{c.countryCode}</td>
+                    <td className="px-6 py-4 font-mono text-caption-mono text-[#baccaf]">{c.email}</td>
+                    <td className="px-6 py-4 font-mono text-caption-mono text-[#dae6d0]">{c.countryCode}</td>
                     <td className="px-6 py-4">
                       <span className={ok === total ? "text-[#42ff00]" : "text-[#ffb4ab]"}>
                         {ok}/{total}
@@ -88,7 +88,7 @@ export default function ContractorsPage() {
                         {statusLabels[c.status]}
                       </span>
                     </td>
-                    <td className="px-6 py-4 font-mono text-[12px] text-[#baccaf]">{c.bankName}</td>
+                    <td className="px-6 py-4 font-mono text-caption-mono text-[#baccaf]">{c.bankName}</td>
                   </tr>
                 )
               })}
@@ -96,7 +96,7 @@ export default function ContractorsPage() {
           </table>
         </div>
 
-        <div className="flex items-center justify-between border-t border-[#3c4b35] bg-[#141e10] px-4 py-4 font-mono text-[12px]">
+        <div className="flex items-center justify-between border-t border-[#3c4b35] bg-[#141e10] px-4 py-4 font-mono text-caption-mono">
           <span className="text-[#baccaf]">
             MOSTRANDO <span className="text-[#dae6d0]">{filtered.length}</span> DE {data.length} REGISTROS
           </span>
