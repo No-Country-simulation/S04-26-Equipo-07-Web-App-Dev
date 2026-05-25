@@ -1,4 +1,7 @@
+import { useNavigate } from "react-router-dom"
+
 export default function LandingPage() {
+  const navigate = useNavigate()
   return (
     <>
       <header className="fixed top-0 w-full z-50 rounded-none h-18 bg-surface/80 backdrop-blur-md border-b border-color-border">
@@ -23,7 +26,7 @@ export default function LandingPage() {
               Automatice el cumplimiento normativo internacional, los pagos instantáneos y la documentación fiscal para su plantilla global a través de un único onboarding de alta precisión.
             </p>
             <div className="flex gap-4 pt-8">
-              <button className="bg-primary-container text-black font-body text-body px-8 py-4 rounded-none font-bold hover:bg-primary-fixed transition-transform hover:-translate-y-px">INICIAR ONBOARDING</button>
+              <button onClick={() => navigate("/login")} className="bg-primary-container text-black font-body text-body px-8 py-4 rounded-none font-bold hover:bg-primary-fixed transition-transform hover:-translate-y-px">INICIAR ONBOARDING</button>
 
             </div>
           </div>
@@ -164,7 +167,7 @@ export default function LandingPage() {
           <div className="flex flex-col items-center gap-8">
             <h2 className="font-display text-display text-white max-w-200">¿Listo para escalar?</h2>
             <div className="flex flex-col items-center gap-4">
-              <button className="bg-primary-container text-black font-body text-body px-12 py-5 rounded-none font-extrabold hover:bg-primary-fixed transition-transform hover:-translate-y-px uppercase tracking-wider">INICIAR ONBOARDING</button>
+              <button onClick={() => navigate("/login")} className="bg-primary-container text-black font-body text-body px-12 py-5 rounded-none font-extrabold hover:bg-primary-fixed transition-transform hover:-translate-y-px uppercase tracking-wider">INICIAR ONBOARDING</button>
 
             </div>
           </div>

@@ -1,40 +1,31 @@
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import React  from "react"
+import React from "react"
 import { useNavigate } from "react-router-dom"
-
-
+import { login } from "@/lib/api/auth"
 
 export const LoginPage = () => {
+  const navigate = useNavigate()
+  const [email, setEmail] = React.useState("")
+  const [password, setPassword] = React.useState("")
+  const [error, setError] = React.useState("")
+  const [loading, setLoading] = React.useState(false)
 
-const navigate = useNavigate()
-const [email, setEmail] = React.useState("")
-const [password, setPassword] = React.useState("")
-const [error, setError] = React.useState("")
-const [loading, setLoading] = React.useState(false)
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
 
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault()
+    setError("")
+    setLoading(true)
 
-  setError("")
-  setLoading(true)
-
-  //Api simulada
-  setTimeout(() => {
-    if (
-      email === "user@company.com" &&
-      password === "password"
-    ) {
-      localStorage.setItem("auth", "true")
-
+    try {
+      await login(email, password)
       navigate("/admin")
-    } else {
-      setError("Invalid credentials")
+    } catch {
+      setError("Credenciales inválidas. Intenta nuevamente.")
     }
 
     setLoading(false)
-  }, 1000)
-}
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-zinc-50 px-4">
@@ -95,6 +86,7 @@ const handleSubmit = async (e: React.FormEvent) => {
           >
             {loading ? "Iniciando sesión..." : "Iniciar Sesión"}
           </Button>
+          <a href="register" className="text-sm text-muted-foreground">¿No tienes una cuenta? <span className="underline hover:text-primary">Registrate</span></a>
         </form>
       </div>
     </div>
