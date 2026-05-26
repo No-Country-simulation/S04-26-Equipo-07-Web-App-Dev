@@ -12,6 +12,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.ArrayList;
 
 @Slf4j
 @Component
@@ -24,6 +25,10 @@ public class DataSeeder implements CommandLineRunner {
     private final WorkerLogRepository workerLogRepository;
     private final UserLogRepository userLogRepository;
     private final AppModuleRepository appModuleRepository;
+    private final CompanyRepository companyRepository;
+    private final PaymentRepository paymentRepository;
+    private final ConvocatoriaRepository convocatoriaRepository;
+    private final OnboardingRequestRepository onboardingRequestRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Override
@@ -32,6 +37,10 @@ public class DataSeeder implements CommandLineRunner {
         seedRoles();
         seedWorkers();
         seedUsers();
+        seedCompanies();
+        seedPayments();
+        seedConvocatorias();
+        seedOnboardingRequests();
         seedLogs();
         log.info("seed data initialized");
     }
@@ -89,29 +98,31 @@ public class DataSeeder implements CommandLineRunner {
     // ─── workers ────────────────────────────────────────────────────────────────
 
     private void seedWorkers() {
-        if (workerRepository.count() > 0) return;
-
         List<Role> roles = roleRepository.findAll();
-        List<String> allRoleIds   = roles.stream().map(Role::getId).toList();
-        List<String> revisorIds   = roles.stream().filter(r -> "REVISOR".equals(r.getName())).map(Role::getId).toList();
+        List<String> allRoleIds = roles.stream().map(Role::getId).toList();
+        List<String> revisorIds = roles.stream().filter(r -> "REVISOR".equals(r.getName())).map(Role::getId).toList();
 
-        Worker admin = new Worker();
+        // upsert by email: overrides the auto-admin created by @PostConstruct
+        Worker admin = workerRepository.findByEmail("admin@northpay.com").orElse(new Worker());
         admin.setFirstName("Admin");
         admin.setLastName("NorthPay");
         admin.setEmail("admin@northpay.com");
         admin.setPassword(passwordEncoder.encode("Admin1234!"));
         admin.setRoleIds(allRoleIds);
         admin.setStatus("active");
+        workerRepository.save(admin);
 
-        Worker carlos = new Worker();
-        carlos.setFirstName("Carlos");
-        carlos.setLastName("Mendoza");
-        carlos.setEmail("carlos.mendoza@northpay.com");
-        carlos.setPassword(passwordEncoder.encode("Revisor1234!"));
-        carlos.setRoleIds(revisorIds);
-        carlos.setStatus("active");
+        if (workerRepository.findByEmail("carlos.mendoza@northpay.com").isEmpty()) {
+            Worker carlos = new Worker();
+            carlos.setFirstName("Carlos");
+            carlos.setLastName("Mendoza");
+            carlos.setEmail("carlos.mendoza@northpay.com");
+            carlos.setPassword(passwordEncoder.encode("Revisor1234!"));
+            carlos.setRoleIds(revisorIds);
+            carlos.setStatus("active");
+            workerRepository.save(carlos);
+        }
 
-        workerRepository.saveAll(Arrays.asList(admin, carlos));
         log.info("workers seeded");
     }
 
@@ -160,6 +171,180 @@ public class DataSeeder implements CommandLineRunner {
 
         userRepository.saveAll(Arrays.asList(u1, u2));
         log.info("users seeded");
+    }
+
+    // ─── companies ──────────────────────────────────────────────────────────────
+
+    private void seedCompanies() {
+        if (companyRepository.count() > 0) return;
+
+        List<User> users = userRepository.findAll();
+        if (users.isEmpty()) return;
+        String uId1 = users.get(0).getId();
+        String uId2 = users.size() > 1 ? users.get(1).getId() : uId1;
+
+        companyRepository.saveAll(Arrays.asList(
+            buildCompany(uId1, "TechSolutions SAC", "TechSol",    "20601234567", "Peru",  "Tecnologia",   "Lima",     "Av. Innovacion 123"),
+            buildCompany(uId1, "LogiPeru S.A.",     "LogiPeru",   "20607654321", "Peru",  "Logistica",    "Callao",   "Jr. Puerto 456"),
+            buildCompany(uId2, "Andina Exports SRL","AndExports",  "20609988776", "Peru",  "Exportacion",  "Arequipa", "Calle Comercio 789")
+        ));
+        log.info("companies seeded");
+    }
+
+    private Company buildCompany(String userId, String name, String tradeName, String taxId,
+                                  String country, String industry, String city, String street) {
+        Company c = new Company();
+        c.setName(name);
+        c.setTradeName(tradeName);
+        c.setTaxId(taxId);
+        c.setCountry(country);
+        c.setIndustry(industry);
+        c.setStatus("active");
+        Company.Address addr = new Company.Address();
+        addr.setCity(city);
+        addr.setStreet(street);
+        c.setAddress(addr);
+        return c;
+    }
+
+    // ─── payments ───────────────────────────────────────────────────────────────
+
+    private void seedPayments() {
+        if (paymentRepository.count() > 0) return;
+
+        List<User> users = userRepository.findAll();
+        if (users.isEmpty()) return;
+        String uId1 = users.get(0).getId();
+        String uId2 = users.size() > 1 ? users.get(1).getId() : uId1;
+
+        paymentRepository.saveAll(Arrays.asList(
+            buildPayment(uId1, 50.00,  "ACCEPTED",  "pi_seed_001"),
+            buildPayment(uId1, 25.00,  "ACCEPTED",  "pi_seed_002"),
+            buildPayment(uId1, 10.00,  "CANCELLED", "pi_seed_003"),
+            buildPayment(uId2, 120.00, "ACCEPTED",  "pi_seed_004"),
+            buildPayment(uId2, 30.00,  "PENDING",   "pi_seed_005")
+        ));
+        log.info("payments seeded");
+    }
+
+    private Payment buildPayment(String userId, double amount, String status, String intentId) {
+        Payment p = new Payment();
+        p.setUserId(userId);
+        p.setAmount(amount);
+        p.setCurrency("USD");
+        p.setStatus(status);
+        p.setStripePaymentIntentId(intentId);
+        return p;
+    }
+
+    // ─── convocatorias ──────────────────────────────────────────────────────────
+
+    private void seedConvocatorias() {
+        if (convocatoriaRepository.count() > 0) return;
+
+        List<Company> companies = companyRepository.findAll();
+        if (companies.isEmpty()) return;
+        String cId1 = companies.get(0).getId();
+        String cId2 = companies.size() > 1 ? companies.get(1).getId() : cId1;
+        String cId3 = companies.size() > 2 ? companies.get(2).getId() : cId1;
+
+        List<User> users = userRepository.findAll();
+        String uId1 = users.isEmpty() ? null : users.get(0).getId();
+
+        convocatoriaRepository.saveAll(Arrays.asList(
+            buildConvocatoria(cId1, uId1, "Desarrollador Backend Java",
+                "Buscamos desarrollador Java con experiencia en Spring Boot y MongoDB.",
+                "Lima, Peru", "remote",  "full-time",  5.0, "ACTIVE"),
+            buildConvocatoria(cId2, uId1, "Analista de Logistica",
+                "Posicion para analista con conocimiento en cadena de suministro.",
+                "Callao, Peru", "on-site", "full-time",  5.0, "ACTIVE"),
+            buildConvocatoria(cId3, uId1, "Asistente Comercial Exportaciones",
+                "Se requiere asistente con ingles avanzado para area de exportaciones.",
+                "Arequipa, Peru", "hybrid", "part-time", 5.0, "DRAFT")
+        ));
+        log.info("convocatorias seeded");
+    }
+
+    private Convocatoria buildConvocatoria(String companyId, String createdBy, String title,
+                                            String description, String location,
+                                            String modality, String contractType,
+                                            double creditCost, String status) {
+        Convocatoria cv = new Convocatoria();
+        cv.setCompanyId(companyId);
+        cv.setCreatedBy(createdBy);
+        cv.setTitle(title);
+        cv.setDescription(description);
+        cv.setLocation(location);
+        cv.setModality(modality);
+        cv.setContractType(contractType);
+        cv.setCreditCost(creditCost);
+        cv.setStatus(status);
+        return cv;
+    }
+
+    // ─── onboarding requests ────────────────────────────────────────────────────
+
+    private void seedOnboardingRequests() {
+        if (onboardingRequestRepository.count() > 0) return;
+
+        List<User> users = userRepository.findAll();
+        if (users.isEmpty()) return;
+        String uId1 = users.get(0).getId();
+        String uId2 = users.size() > 1 ? users.get(1).getId() : uId1;
+
+        List<Worker> workers = workerRepository.findAll();
+        String wId = workers.isEmpty() ? null : workers.get(0).getId();
+
+        // onboarding aprobado para u1
+        OnboardingRequest req1 = new OnboardingRequest();
+        req1.setUserId(uId1);
+        req1.setAssignedWorkerId(wId);
+        req1.setStatus("APPROVED");
+        List<OnboardingRequest.DocumentReview> reviews1 = new ArrayList<>();
+        reviews1.add(buildDocReview("dni",    "APPROVED", "documento claro y vigente",      wId));
+        reviews1.add(buildDocReview("tax_id", "APPROVED", "ruc validado correctamente",      wId));
+        req1.setDocumentReviews(reviews1);
+        List<OnboardingRequest.ActionEntry> history1 = new ArrayList<>();
+        history1.add(buildAction(wId, "ASSIGN",  "solicitud asignada al revisor",     72));
+        history1.add(buildAction(wId, "APPROVE", "onboarding aprobado sin observaciones", 6));
+        req1.setActionHistory(history1);
+
+        // onboarding en revision para u2
+        OnboardingRequest req2 = new OnboardingRequest();
+        req2.setUserId(uId2);
+        req2.setAssignedWorkerId(wId);
+        req2.setStatus("IN_REVIEW");
+        List<OnboardingRequest.DocumentReview> reviews2 = new ArrayList<>();
+        reviews2.add(buildDocReview("dni",    "APPROVED", "documento valido",     wId));
+        reviews2.add(buildDocReview("tax_id", "PENDING",  null,                   null));
+        req2.setDocumentReviews(reviews2);
+        List<OnboardingRequest.ActionEntry> history2 = new ArrayList<>();
+        history2.add(buildAction(wId, "ASSIGN", "solicitud asignada para revision", 10));
+        req2.setActionHistory(history2);
+
+        onboardingRequestRepository.saveAll(Arrays.asList(req1, req2));
+        log.info("onboarding requests seeded");
+    }
+
+    private OnboardingRequest.DocumentReview buildDocReview(String key, String status,
+                                                             String observation, String reviewedBy) {
+        OnboardingRequest.DocumentReview dr = new OnboardingRequest.DocumentReview();
+        dr.setDocumentKey(key);
+        dr.setStatus(status);
+        dr.setObservation(observation);
+        dr.setReviewedBy(reviewedBy);
+        if (!"PENDING".equals(status)) dr.setReviewedAt(LocalDateTime.now().minusHours(12));
+        return dr;
+    }
+
+    private OnboardingRequest.ActionEntry buildAction(String workerId, String action,
+                                                       String notes, long hoursAgo) {
+        OnboardingRequest.ActionEntry entry = new OnboardingRequest.ActionEntry();
+        entry.setWorkerId(workerId);
+        entry.setAction(action);
+        entry.setNotes(notes);
+        entry.setTimestamp(LocalDateTime.now().minusHours(hoursAgo));
+        return entry;
     }
 
     // ─── logs ───────────────────────────────────────────────────────────────────
