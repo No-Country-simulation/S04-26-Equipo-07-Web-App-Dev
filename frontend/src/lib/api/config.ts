@@ -17,5 +17,9 @@ export const API = {
     submit: '/onboarding',
     upload: '/onboarding/upload',
   },
+  invitations: {
+    validate: (token: string) => `/invitations/${token}`,
+    create: '/invitations',
+  },
   users: '/users',
 }
