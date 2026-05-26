@@ -30,6 +30,7 @@ function OnboardingContent() {
   const navigate = useNavigate()
   const { currentStep, setCurrentStep, data, resetOnboarding } = useOnboarding()
   const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
 
   const { personalInfo, documents, contract, payment } = data
   const allDocsUploaded = documents.every((d) => d.uploaded)
@@ -55,13 +56,16 @@ function OnboardingContent() {
   const isLastStep = currentStep === steps.length - 1
 
   const handleNext = async () => {
+    setSubmitError(null)
     if (isLastStep) {
       setSubmitting(true)
       try {
         await submitOnboarding(data)
         resetOnboarding()
         navigate("/onboarding/success")
-      } catch {
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : "Error al enviar los datos. Intenta de nuevo."
+        setSubmitError(msg)
         setSubmitting(false)
       }
       return
@@ -143,6 +147,13 @@ function OnboardingContent() {
 
           <StepComponent />
 
+          {submitError && (
+            <div className="mb-4 border border-color-warning/30 bg-color-warning/5 p-4">
+              <p className="font-caption-mono text-caption-mono text-color-warning text-center">
+                {submitError}
+              </p>
+            </div>
+          )}
           <div className="flex justify-between mt-10 pt-8 border-t border-color-border">
             <button
               onClick={handleBack}
@@ -182,7 +193,8 @@ function OnboardingContent() {
   )
 }
 
-export default function Onboarding() {
+export default function Onboarding({ inner }: { inner?: boolean }) {
+  if (inner) return <OnboardingContent />
   return (
     <OnboardingProvider>
       <OnboardingContent />
