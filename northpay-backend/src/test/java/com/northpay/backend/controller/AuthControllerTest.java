@@ -7,6 +7,7 @@ import com.northpay.backend.dto.auth.SetPasswordRequest;
 import com.northpay.backend.model.Invitation;
 import com.northpay.backend.service.AuthService;
 import com.northpay.backend.service.InvitationService;
+import com.northpay.backend.security.JwtUtil;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -15,6 +16,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -34,17 +36,18 @@ class AuthControllerTest {
     @MockBean
     InvitationService invitationService;
 
+    @MockBean
+    JwtUtil jwtUtil;
+
     @Test
     void login_validCredentials_returnsToken() throws Exception {
         LoginRequest req = new LoginRequest();
         req.setEmail("user@test.com");
         req.setPassword("password123");
 
-        LoginResponse resp = new LoginResponse();
-        resp.setToken("jwt-token");
-        resp.setEmail("user@test.com");
+        LoginResponse resp = new LoginResponse("jwt-token", "user-1", "user@test.com", "John", "Doe", "user", 0.0);
 
-        when(authService.login(any())).thenReturn(resp);
+        when(authService.login(anyString(), anyString())).thenReturn(resp);
 
         mvc.perform(post("/api/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
