@@ -2,10 +2,11 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import React from "react"
 import { useNavigate } from "react-router-dom"
-import { login } from "@/lib/api/auth"
+import { useUserAuth } from "@/contexts/UserAuthContext"
 
 export const LoginPage = () => {
   const navigate = useNavigate()
+  const { login } = useUserAuth()
   const [email, setEmail] = React.useState("")
   const [password, setPassword] = React.useState("")
   const [error, setError] = React.useState("")
@@ -13,17 +14,14 @@ export const LoginPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-
     setError("")
     setLoading(true)
-
     try {
       await login(email, password)
-      navigate("/admin")
+      navigate("/dashboard")
     } catch {
-      setError("Credenciales inválidas. Intenta nuevamente.")
+      setError("Credenciales invalidas. Intenta nuevamente.")
     }
-
     setLoading(false)
   }
 
