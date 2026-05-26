@@ -13,6 +13,12 @@ import WorkerLogin from "@/pages/worker/WorkerLogin"
 import WorkerLayout from "@/pages/worker/WorkerLayout"
 import WorkerDashboard from "@/pages/worker/WorkerDashboard"
 import SolicitudesPage from "@/pages/worker/SolicitudesPage"
+import WorkersPage from "@/pages/worker/WorkersPage"
+import RolesPage from "@/pages/worker/RolesPage"
+import ModulesPage from "@/pages/worker/ModulesPage"
+import WorkerConvocatoriasPage from "@/pages/worker/WorkerConvocatoriasPage"
+import LogsUsersPage from "@/pages/worker/LogsUsersPage"
+import LogsWorkersPage from "@/pages/worker/LogsWorkersPage"
 import UserLayout from "@/pages/user/UserLayout"
 import UserDashboard from "@/pages/user/UserDashboard"
 import EmpresasPage from "@/pages/user/EmpresasPage"
@@ -32,7 +38,14 @@ function AppRouter() {
         {/* rutas del panel de trabajador */}
         <Route path="/worker" element={<WorkerLayout />}>
           <Route index element={<WorkerDashboard />} />
-          <Route path="solicitudes" element={<SolicitudesPage />} />
+          <Route path="dashboard" element={<WorkerDashboard />} />
+          <Route path="requests" element={<SolicitudesPage />} />
+          <Route path="workers" element={<WorkersPage />} />
+          <Route path="roles" element={<RolesPage />} />
+          <Route path="modules" element={<ModulesPage />} />
+          <Route path="convocatorias" element={<WorkerConvocatoriasPage />} />
+          <Route path="logs/users" element={<LogsUsersPage />} />
+          <Route path="logs/workers" element={<LogsWorkersPage />} />
         </Route>
 
         {/* rutas del panel de usuario */}
