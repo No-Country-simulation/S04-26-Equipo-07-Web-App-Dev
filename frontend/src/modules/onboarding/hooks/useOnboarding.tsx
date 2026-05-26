@@ -1,5 +1,6 @@
-import { createContext, useContext, useState, type ReactNode } from "react"
+import { createContext, useContext, useState, useMemo, type ReactNode } from "react"
 import type { OnboardingData, PersonalInfo, PaymentInfo, OnboardingDocument } from "@/types/onboarding"
+import { useUpload } from "@/hooks/useUpload"
 
 const defaultDocuments: OnboardingDocument[] = [
   { id: "id", name: "Identificación Oficial", fileName: null, uploaded: false },
@@ -7,7 +8,7 @@ const defaultDocuments: OnboardingDocument[] = [
   { id: "tax", name: "Cédula Fiscal / RFC", fileName: null, uploaded: false },
 ]
 
-const initialData: OnboardingData = {
+const defaultInitialData: OnboardingData = {
   personalInfo: {
     fullName: "", email: "", phone: "", phoneCode: "+52", dateOfBirth: "",
     address: "", city: "", state: "", zipCode: "", country: "México",
@@ -19,12 +20,20 @@ const initialData: OnboardingData = {
   },
 }
 
+function mergeInitialData(prefilled?: Partial<OnboardingData>): OnboardingData {
+  if (!prefilled) return defaultInitialData
+  return {
+    ...defaultInitialData,
+    personalInfo: { ...defaultInitialData.personalInfo, ...prefilled.personalInfo },
+  }
+}
+
 type OnboardingContextType = {
   currentStep: number
   setCurrentStep: (step: number) => void
   data: OnboardingData
   updatePersonalInfo: (info: Partial<PersonalInfo>) => void
-  uploadDocument: (id: string, file: File) => void
+  uploadDocument: (id: string, file: File) => Promise<void>
   removeDocument: (id: string) => void
   acceptContract: (signature: string) => void
   updatePayment: (info: Partial<PaymentInfo>) => void
@@ -33,9 +42,11 @@ type OnboardingContextType = {
 
 const OnboardingContext = createContext<OnboardingContextType | null>(null)
 
-export function OnboardingProvider({ children }: { children: ReactNode }) {
+export function OnboardingProvider({ children, prefilledData }: { children: ReactNode; prefilledData?: Partial<OnboardingData> }) {
   const [currentStep, setCurrentStep] = useState(0)
+  const initialData = useMemo(() => mergeInitialData(prefilledData), [])
   const [data, setData] = useState<OnboardingData>(initialData)
+  const { upload: cloudinaryUpload, reset: resetUpload } = useUpload()
 
   const updatePersonalInfo = (info: Partial<PersonalInfo>) => {
     setData((prev) => ({
@@ -44,11 +55,13 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
     }))
   }
 
-  const uploadDocument = (id: string, file: File) => {
+  const uploadDocument = async (id: string, file: File) => {
+    resetUpload()
+    const result = await cloudinaryUpload(file)
     setData((prev) => ({
       ...prev,
       documents: prev.documents.map((doc) =>
-        doc.id === id ? { ...doc, fileName: file.name, uploaded: true } : doc
+        doc.id === id ? { ...doc, fileName: file.name, uploaded: true, url: result.url } : doc
       ),
     }))
   }
