@@ -1,14 +1,26 @@
-import { useRef } from "react"
-import { Upload, X } from "lucide-react"
+import { useRef, useState } from "react"
+import { Loader2, Upload, X } from "lucide-react"
 import { useOnboarding } from "@/modules/onboarding/hooks/useOnboarding"
 
 export default function DocumentsStep() {
   const { data, uploadDocument, removeDocument } = useOnboarding()
   const fileInputRef = useRef<{ [key: string]: HTMLInputElement | null }>({})
+  const [uploadingIds, setUploadingIds] = useState<Set<string>>(new Set())
 
-  const handleFileSelect = (id: string, e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = async (id: string, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (file) uploadDocument(id, file)
+    if (!file) return
+    setUploadingIds((prev) => new Set(prev).add(id))
+    try {
+      await uploadDocument(id, file)
+    } catch {
+      console.error("Error uploading document")
+    }
+    setUploadingIds((prev) => {
+      const next = new Set(prev)
+      next.delete(id)
+      return next
+    })
   }
 
   return (
@@ -50,6 +62,14 @@ export default function DocumentsStep() {
                 >
                   <X size={14} />
                   <span className="font-caption-mono text-caption-mono uppercase tracking-widest">Eliminar</span>
+                </button>
+              ) : uploadingIds.has(doc.id) ? (
+                <button
+                  disabled
+                  className="flex items-center gap-2 px-4 py-2 text-sm bg-primary-container/10 text-primary-container/50 border border-primary-container/20 cursor-not-allowed"
+                >
+                  <Loader2 size={14} className="animate-spin" />
+                  <span className="font-caption-mono text-caption-mono uppercase tracking-widest">Subiendo...</span>
                 </button>
               ) : (
                 <button
