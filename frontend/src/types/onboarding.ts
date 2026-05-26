@@ -16,6 +16,7 @@ export type OnboardingDocument = {
   name: string
   fileName: string | null
   uploaded: boolean
+  url?: string
 }
 
 export type ContractInfo = {
