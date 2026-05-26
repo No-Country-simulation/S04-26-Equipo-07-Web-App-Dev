@@ -3,36 +3,40 @@ import { useQuery } from '@tanstack/react-query'
 import { requestService } from '@/lib/services/worker/request.service'
 import { workerService } from '@/lib/services/worker/worker.service'
 import { roleService } from '@/lib/services/worker/role.service'
+import { logService } from '@/lib/services/worker/log.service'
 import { createSocketClient } from '@/lib/websocket/socket'
 import { Client } from '@stomp/stompjs'
 import { TrendingUp, ShieldCheck, Users, ClipboardList, RefreshCw } from 'lucide-react'
 
+type WorkerLog = {
+  id: string; workerId: string; action: string
+  details: string; ipAddress: string; timestamp: string
+}
+
+// maps action keywords to display colors for the terminal-style log
+function actionColor(action: string): string {
+  const a = action.toUpperCase()
+  if (a.includes('LOGIN') || a.includes('AUTH') || a.includes('SESSION')) return 'text-[#42ff00]'
+  if (a.includes('ERROR') || a.includes('FAIL') || a.includes('DENY') || a.includes('REJECT')) return 'text-[#ffb4ab]'
+  if (a.includes('APPROVE') || a.includes('APROV')) return 'text-[#42ff00]'
+  return 'text-[#baccaf]'
+}
+
 function LiveLogs() {
+  const { data, isLoading } = useQuery<{ content: WorkerLog[] }>({
+    queryKey: ['dashboard-live-logs'],
+    queryFn: () => logService.workerLogs({ page: 0, size: 15 }).then(r => r.data),
+    // polls every 15 seconds to refresh log entries
+    refetchInterval: 15_000,
+  })
+
+  const logs = data?.content ?? []
   const logsRef = useRef<HTMLDivElement>(null)
 
+  // scroll to top whenever new entries arrive
   useEffect(() => {
-    const prefixes = [
-      { label: 'REQUEST_SERVICE', color: 'text-[#42ff00]' },
-      { label: 'AUTH_ENGINE', color: 'text-[#baccaf]' },
-      { label: 'BANK_API', color: 'text-[#ffb4ab]' },
-      { label: 'WORKER_SYS', color: 'text-[#42ff00]' },
-      { label: 'SYSTEM', color: 'text-[#baccaf]' },
-    ]
-    const interval = setInterval(() => {
-      if (!logsRef.current) return
-      const now = new Date().toLocaleTimeString('en-GB', { hour12: false })
-      const prefix = prefixes[Math.floor(Math.random() * prefixes.length)]
-      const actions = ['Solicitud asignada', 'Documento aprobado', 'Sesión iniciada', 'Rol actualizado', 'Estado sincronizado']
-      const msg = actions[Math.floor(Math.random() * actions.length)]
-      const p = document.createElement('p')
-      p.className = 'opacity-0 transition-opacity duration-500'
-      p.innerHTML = `<span class="${prefix.color}">[${now}]</span> ${prefix.label}: ${msg}`
-      logsRef.current.prepend(p)
-      requestAnimationFrame(() => p.classList.remove('opacity-0'))
-      if (logsRef.current.children.length > 20) logsRef.current.lastElementChild?.remove()
-    }, 5000)
-    return () => clearInterval(interval)
-  }, [])
+    if (logsRef.current) logsRef.current.scrollTop = 0
+  }, [logs.length])
 
   return (
     <div className="col-span-12 border border-[#3c4b35] bg-[#182214] p-6 lg:col-span-8">
@@ -49,11 +53,26 @@ function LiveLogs() {
         ref={logsRef}
         className="h-36 overflow-y-auto bg-black/40 p-3 font-mono text-[11px] leading-6 opacity-80 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-[#3c4b35] [&::-webkit-scrollbar-track]:bg-[#141e10]"
       >
-        <p><span className="text-[#42ff00]">[09:41:02]</span> REQUEST_SERVICE: Solicitud NP_00192 asignada</p>
-        <p><span className="text-[#baccaf]">[09:40:55]</span> AUTH_ENGINE: Worker session validated</p>
-        <p><span className="text-[#ffb4ab]">[09:40:41]</span> BANK_API: Delayed response. Retrying in 5s...</p>
-        <p><span className="text-[#42ff00]">[09:40:12]</span> WORKER_SYS: Rol actualizado: REVISOR</p>
-        <p><span className="text-[#baccaf]">[09:39:58]</span> SYSTEM: Reconciliación diaria completada.</p>
+        {isLoading && (
+          <p className="text-[#3c4b35]">Cargando registros...</p>
+        )}
+        {!isLoading && logs.length === 0 && (
+          <p className="text-[#3c4b35]">Sin registros disponibles.</p>
+        )}
+        {logs.map(log => {
+          const ts = new Date(log.timestamp).toLocaleTimeString('en-GB', { hour12: false })
+          const color = actionColor(log.action)
+          const shortId = log.workerId?.slice(-8) ?? 'SYSTEM'
+          const detail = log.details ? ` — ${log.details}` : ''
+          return (
+            <p key={log.id}>
+              <span className={color}>[{ts}]</span>{' '}
+              <span className="text-[#dae6d0]">{log.action}</span>
+              <span className="text-[#3c4b35]"> #{shortId}</span>
+              {detail}
+            </p>
+          )
+        })}
       </div>
     </div>
   )
