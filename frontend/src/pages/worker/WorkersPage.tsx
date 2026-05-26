@@ -1,9 +1,8 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { workerService } from '@/lib/services/worker/worker.service'
-import { invitationService } from '@/lib/services/worker/invitation.service'
 import { roleService } from '@/lib/services/worker/role.service'
-import { UserPlus, Trash2, X } from 'lucide-react'
+import { UserPlus, Trash2, X, Eye, EyeOff } from 'lucide-react'
 
 type Worker = {
   id: string; firstName: string; lastName: string
@@ -21,62 +20,77 @@ function InitialsAvatar({ name }: { name: string }) {
   )
 }
 
-function InviteModal({ onClose }: { onClose: () => void }) {
-  const [email, setEmail] = useState('')
-  const [sent, setSent] = useState(false)
+function CreateWorkerModal({ onClose }: { onClose: () => void }) {
+  const qc = useQueryClient()
+  const [showPw, setShowPw] = useState(false)
+  const [form, setForm] = useState({ firstName: '', lastName: '', email: '', password: '' })
 
-  const invite = useMutation({
-    mutationFn: (email: string) => invitationService.send(email),
-    onSuccess: () => setSent(true),
+  const create = useMutation({
+    mutationFn: (data: object) => workerService.create(data),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['workers'] }); onClose() },
   })
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) =>
+    setForm(f => ({ ...f, [e.target.name]: e.target.value }))
+
+  const valid = form.firstName && form.lastName && form.email && form.password.length >= 8
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm" onClick={onClose}>
       <div className="w-full max-w-md border border-[#3c4b35] bg-[#0c1609]" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between border-b border-[#3c4b35] px-6 py-4">
           <h2 className="font-mono text-[13px] uppercase tracking-wider text-[#f0ffe4]">
-            Invitar_<span className="text-[#42ff00]">Trabajador</span>
+            Nuevo_<span className="text-[#42ff00]">Trabajador</span>
           </h2>
           <button onClick={onClose} className="text-[#baccaf] hover:text-[#f0ffe4]"><X size={18} /></button>
         </div>
-        <div className="p-6">
-          {sent ? (
-            <div className="text-center py-4">
-              <p className="font-mono text-[11px] text-[#42ff00] uppercase tracking-wider">
-                ✓ Invitación enviada a {email}
-              </p>
-              <p className="mt-1 font-mono text-[10px] text-[#baccaf]">
-                El trabajador recibirá un enlace para configurar su cuenta.
-              </p>
-            </div>
-          ) : (
-            <>
-              <label className="block mb-4">
-                <span className="font-mono text-[10px] uppercase tracking-wider text-[#baccaf]">Email</span>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  placeholder="trabajador@empresa.com"
-                  className="mt-1 w-full border border-[#3c4b35] bg-[#182214] px-3 py-2 font-mono text-[12px] text-[#dae6d0] placeholder:text-[#3c4b35] outline-none focus:border-[#42ff00]"
-                />
-              </label>
-              <button
-                onClick={() => email && invite.mutate(email)}
-                disabled={!email || invite.isPending}
-                className="w-full border border-[#42ff00] bg-[#42ff00] py-2 font-mono text-[11px] font-bold uppercase tracking-wider text-[#083900] hover:brightness-110 disabled:opacity-50"
-              >
-                {invite.isPending ? 'Enviando...' : 'Enviar Invitación'}
+        <div className="p-6 space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <label>
+              <span className="block font-mono text-[10px] uppercase tracking-wider text-[#baccaf] mb-1">Nombre</span>
+              <input name="firstName" value={form.firstName} onChange={handleChange}
+                placeholder="Carlos"
+                className="w-full border border-[#3c4b35] bg-[#182214] px-3 py-2 font-mono text-[12px] text-[#dae6d0] placeholder:text-[#3c4b35] outline-none focus:border-[#42ff00]" />
+            </label>
+            <label>
+              <span className="block font-mono text-[10px] uppercase tracking-wider text-[#baccaf] mb-1">Apellido</span>
+              <input name="lastName" value={form.lastName} onChange={handleChange}
+                placeholder="Mendez"
+                className="w-full border border-[#3c4b35] bg-[#182214] px-3 py-2 font-mono text-[12px] text-[#dae6d0] placeholder:text-[#3c4b35] outline-none focus:border-[#42ff00]" />
+            </label>
+          </div>
+          <label>
+            <span className="block font-mono text-[10px] uppercase tracking-wider text-[#baccaf] mb-1">Email</span>
+            <input name="email" type="email" value={form.email} onChange={handleChange}
+              placeholder="trabajador@northpay.com"
+              className="w-full border border-[#3c4b35] bg-[#182214] px-3 py-2 font-mono text-[12px] text-[#dae6d0] placeholder:text-[#3c4b35] outline-none focus:border-[#42ff00]" />
+          </label>
+          <label>
+            <span className="block font-mono text-[10px] uppercase tracking-wider text-[#baccaf] mb-1">
+              Contraseña <span className="text-[#3c4b35]">(min. 8 chars)</span>
+            </span>
+            <div className="relative">
+              <input name="password" type={showPw ? 'text' : 'password'} value={form.password} onChange={handleChange}
+                placeholder="Min. 8 caracteres"
+                className="w-full border border-[#3c4b35] bg-[#182214] px-3 py-2 pr-10 font-mono text-[12px] text-[#dae6d0] placeholder:text-[#3c4b35] outline-none focus:border-[#42ff00]" />
+              <button type="button" onClick={() => setShowPw(v => !v)}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#3c4b35] hover:text-[#baccaf]">
+                {showPw ? <EyeOff size={14} /> : <Eye size={14} />}
               </button>
-              {invite.isError && (
-                <p className="mt-2 font-mono text-[10px] text-[#ffb4ab]">Error al enviar la invitación.</p>
-              )}
-            </>
+            </div>
+          </label>
+          <button onClick={() => valid && create.mutate(form)}
+            disabled={!valid || create.isPending}
+            className="w-full border border-[#42ff00] bg-[#42ff00] py-2 font-mono text-[11px] font-bold uppercase tracking-wider text-[#083900] hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed">
+            {create.isPending ? 'Creando...' : 'Crear Trabajador'}
+          </button>
+          {create.isError && (
+            <p className="font-mono text-[10px] text-[#ffb4ab]">Error al crear el trabajador.</p>
           )}
         </div>
         <div className="border-t border-[#3c4b35] px-6 py-3 text-right">
           <button onClick={onClose} className="font-mono text-[10px] uppercase tracking-wider text-[#baccaf] hover:text-[#42ff00]">
-            Cerrar
+            Cancelar
           </button>
         </div>
       </div>
@@ -86,7 +100,7 @@ function InviteModal({ onClose }: { onClose: () => void }) {
 
 export default function WorkersPage() {
   const qc = useQueryClient()
-  const [showInvite, setShowInvite] = useState(false)
+  const [showCreate, setShowCreate] = useState(false)
 
   const { data: workers = [], isLoading } = useQuery<Worker[]>({
     queryKey: ['workers'],
@@ -116,11 +130,11 @@ export default function WorkersPage() {
           </p>
         </div>
         <button
-          onClick={() => setShowInvite(true)}
+          onClick={() => setShowCreate(true)}
           className="flex items-center gap-2 border border-[#42ff00] bg-[#42ff00]/10 px-4 py-2 font-mono text-[10px] uppercase tracking-wider text-[#42ff00] hover:bg-[#42ff00] hover:text-[#083900]"
         >
           <UserPlus size={14} />
-          Invitar Trabajador
+          Nuevo Trabajador
         </button>
       </header>
 
@@ -193,7 +207,7 @@ export default function WorkersPage() {
         </div>
       </div>
 
-      {showInvite && <InviteModal onClose={() => setShowInvite(false)} />}
+      {showCreate && <CreateWorkerModal onClose={() => setShowCreate(false)} />}
     </div>
   )
 }
