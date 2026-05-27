@@ -12,6 +12,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.util.List;
 
@@ -19,8 +20,10 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 
 @WebMvcTest(ConvocatoriaController.class)
+@ActiveProfiles("test")
 class ConvocatoriaControllerTest {
 
     @Autowired
@@ -50,7 +53,8 @@ class ConvocatoriaControllerTest {
 
         mvc.perform(post("/api/convocatorias")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(req)))
+            .content(mapper.writeValueAsString(req))
+            .with(csrf()))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.id").value("conv-1"));
     }
