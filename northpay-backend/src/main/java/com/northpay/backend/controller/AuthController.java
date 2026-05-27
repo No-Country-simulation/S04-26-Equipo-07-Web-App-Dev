@@ -8,6 +8,8 @@ import com.northpay.backend.model.Invitation;
 import com.northpay.backend.model.User;
 import com.northpay.backend.service.AuthService;
 import com.northpay.backend.service.InvitationService;
+import com.northpay.backend.service.LogService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -22,15 +24,24 @@ public class AuthController {
 
     private final AuthService authService;
     private final InvitationService invitationService;
+    private final LogService logService;
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest req) {
-        return ResponseEntity.ok(authService.login(req.getEmail(), req.getPassword()));
+    public ResponseEntity<LoginResponse> login(
+            @Valid @RequestBody LoginRequest req,
+            HttpServletRequest httpRequest) {
+        LoginResponse response = authService.login(req.getEmail(), req.getPassword());
+        // registra el login como log del usuario
+        logService.logUser(response.getId(), "LOGIN", "inicio de sesion exitoso", httpRequest);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/register")
-    public ResponseEntity<User> register(@Valid @RequestBody RegisterRequest req) {
+    public ResponseEntity<User> register(
+            @Valid @RequestBody RegisterRequest req,
+            HttpServletRequest httpRequest) {
         User user = authService.registerWithInvitation(req);
+        logService.logUser(user.getId(), "REGISTER", "nuevo usuario registrado", httpRequest);
         // no retornar el campo password en la respuesta
         user.setPassword(null);
         return ResponseEntity.ok(user);

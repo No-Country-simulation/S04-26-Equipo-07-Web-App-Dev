@@ -10,6 +10,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Comparator;
@@ -27,18 +28,34 @@ public class PaymentController {
     @PostMapping("/api/users/payments/create")
     public ResponseEntity<Map<String, String>> createPayment(
             @Valid @RequestBody CreatePaymentRequest req,
-            @AuthenticationPrincipal(expression = "username") String userId) throws Exception {
-        return ResponseEntity.ok(stripeService.createPaymentIntent(userId, req.getAmount()));
+            @AuthenticationPrincipal UserDetails principal) throws Exception {
+        return ResponseEntity.ok(stripeService.createPaymentIntent(principal.getUsername(), req.getAmount()));
+    }
+
+    // crea una sesion de checkout de stripe para redirigir al usuario al pago
+    @PostMapping("/api/users/payments/checkout")
+    public ResponseEntity<Map<String, String>> createCheckout(
+            @Valid @RequestBody CreatePaymentRequest req,
+            @AuthenticationPrincipal UserDetails principal) throws Exception {
+        return ResponseEntity.ok(stripeService.createCheckoutSession(principal.getUsername(), req.getAmount()));
+    }
+
+    // verifica el checkout de stripe y acredita al usuario (fallback cuando el webhook no dispara en dev)
+    @PostMapping("/api/users/payments/{paymentId}/verify")
+    public ResponseEntity<Map<String, Object>> verifyPayment(
+            @PathVariable String paymentId,
+            @AuthenticationPrincipal UserDetails principal) throws Exception {
+        return ResponseEntity.ok(stripeService.verifyAndCredit(paymentId, principal.getUsername()));
     }
 
     @GetMapping("/api/users/payments")
-    public ResponseEntity<List<Payment>> getHistory(@AuthenticationPrincipal(expression = "username") String userId) {
-        return ResponseEntity.ok(stripeService.getPaymentHistory(userId));
+    public ResponseEntity<List<Payment>> getHistory(@AuthenticationPrincipal UserDetails principal) {
+        return ResponseEntity.ok(stripeService.getPaymentHistory(principal.getUsername()));
     }
 
     @GetMapping("/api/users/balance")
-    public ResponseEntity<Map<String, Double>> getBalance(@AuthenticationPrincipal(expression = "username") String userId) {
-        User user = userRepository.findById(userId)
+    public ResponseEntity<Map<String, Double>> getBalance(@AuthenticationPrincipal UserDetails principal) {
+        User user = userRepository.findById(principal.getUsername())
             .orElseThrow();
         return ResponseEntity.ok(Map.of("credits", user.getCredits()));
     }

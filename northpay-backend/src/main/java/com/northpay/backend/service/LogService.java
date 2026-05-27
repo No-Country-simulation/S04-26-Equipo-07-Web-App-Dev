@@ -28,6 +28,17 @@ public class LogService {
         userLogRepository.save(log);
     }
 
+    // sobrecarga sin HttpServletRequest para logging interno desde servicios
+    @Async
+    public void logUser(String userId, String action, String details) {
+        UserLog log = new UserLog();
+        log.setUserId(userId);
+        log.setAction(action);
+        log.setDetails(details);
+        log.setIpAddress("system");
+        userLogRepository.save(log);
+    }
+
     @Async
     public void logWorker(String workerId, String action, String details, HttpServletRequest request) {
         WorkerLog log = new WorkerLog();
@@ -38,11 +49,28 @@ public class LogService {
         workerLogRepository.save(log);
     }
 
+    // sobrecarga sin HttpServletRequest para logging interno desde servicios
+    @Async
+    public void logWorker(String workerId, String action, String details) {
+        WorkerLog log = new WorkerLog();
+        log.setWorkerId(workerId);
+        log.setAction(action);
+        log.setDetails(details);
+        log.setIpAddress("system");
+        workerLogRepository.save(log);
+    }
+
     public Page<UserLog> getUserLogs(String userId, Pageable pageable) {
+        if (userId == null || userId.isBlank()) {
+            return userLogRepository.findAllByOrderByTimestampDesc(pageable);
+        }
         return userLogRepository.findByUserIdOrderByTimestampDesc(userId, pageable);
     }
 
     public Page<WorkerLog> getWorkerLogs(String workerId, Pageable pageable) {
+        if (workerId == null || workerId.isBlank()) {
+            return workerLogRepository.findAllByOrderByTimestampDesc(pageable);
+        }
         return workerLogRepository.findByWorkerIdOrderByTimestampDesc(workerId, pageable);
     }
 

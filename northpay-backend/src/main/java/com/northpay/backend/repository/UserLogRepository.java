@@ -9,4 +9,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface UserLogRepository extends MongoRepository<UserLog, String> {
     Page<UserLog> findByUserIdOrderByTimestampDesc(String userId, Pageable pageable);
+    Page<UserLog> findAllByOrderByTimestampDesc(Pageable pageable);
 }
