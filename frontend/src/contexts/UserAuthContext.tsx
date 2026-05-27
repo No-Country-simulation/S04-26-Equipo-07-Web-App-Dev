@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useCallback } from 'react'
 import type { ReactNode } from 'react'
 import { authService } from '@/lib/services/user/auth.service'
+import userAxios from '@/lib/axios/user.axios'
 
 interface UserAuthContextType {
   token: string | null
@@ -8,6 +9,7 @@ interface UserAuthContextType {
   credits: number
   login: (email: string, password: string) => Promise<void>
   logout: () => void
+  refreshCredits: () => Promise<void>
   isAuthenticated: boolean
 }
 
@@ -39,9 +41,20 @@ export function UserAuthProvider({ children }: { children: ReactNode }) {
     setCredits(0)
   }, [])
 
+  const refreshCredits = useCallback(async () => {
+    try {
+      const { data } = await userAxios.get<{ credits: number }>('/users/balance')
+      const newCredits = data.credits ?? 0
+      localStorage.setItem('user_credits', String(newCredits))
+      setCredits(newCredits)
+    } catch {
+      // silently ignore — stale value stays
+    }
+  }, [])
+
   return (
     <UserAuthContext.Provider
-      value={{ token, userId, credits, login, logout, isAuthenticated: !!token }}
+      value={{ token, userId, credits, login, logout, refreshCredits, isAuthenticated: !!token }}
     >
       {children}
     </UserAuthContext.Provider>

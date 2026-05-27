@@ -26,6 +26,8 @@ import UserLayout from "@/pages/user/UserLayout"
 import UserDashboard from "@/pages/user/UserDashboard"
 import EmpresasPage from "@/pages/user/EmpresasPage"
 import ConvocatoriasPage from "@/pages/user/ConvocatoriasPage"
+import ConvocatoriaPreviewPage from "@/pages/user/ConvocatoriaPreviewPage"
+import ConvocatoriaApplyPage from "@/pages/ConvocatoriaApplyPage"
 import MovimientosPage from "@/pages/user/MovimientosPage"
 
 function AppRouter() {
@@ -36,6 +38,7 @@ function AppRouter() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<InvitationRegister />} />
         <Route path="/set-password" element={<SetPassword />} />
+        <Route path="/convocatoria/:id/apply" element={<ConvocatoriaApplyPage />} />
         <Route path="/worker/login" element={<WorkerLogin />} />
 
         {/* rutas del panel de trabajador */}
@@ -66,6 +69,7 @@ function AppRouter() {
           <Route index element={<UserDashboard />} />
           <Route path="empresas" element={<EmpresasPage />} />
           <Route path="convocatorias" element={<ConvocatoriasPage />} />
+          <Route path="convocatorias/:id/preview" element={<ConvocatoriaPreviewPage />} />
           <Route path="movimientos" element={<MovimientosPage />} />
         </Route>
 

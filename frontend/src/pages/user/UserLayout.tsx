@@ -1,7 +1,7 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { useUserAuth } from '@/contexts/UserAuthContext'
 import { LayoutDashboard, Building2, Megaphone, ArrowLeftRight, LogOut, Plus } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import LoadCreditsModal from '@/components/user/LoadCreditsModal'
 
 const NAV = [
@@ -12,9 +12,11 @@ const NAV = [
 ]
 
 export default function UserLayout() {
-  const { logout, credits } = useUserAuth()
+  const { logout, credits, refreshCredits } = useUserAuth()
   const navigate = useNavigate()
   const [showCreditsModal, setShowCreditsModal] = useState(false)
+
+  useEffect(() => { refreshCredits() }, [refreshCredits])
 
   const handleLogout = () => { logout(); navigate('/login') }
 
