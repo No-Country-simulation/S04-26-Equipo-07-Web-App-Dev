@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, type ReactNode } from "react"
 import type { OnboardingData, PersonalInfo, PaymentInfo, OnboardingDocument } from "@/types/onboarding"
+import { onboardingService } from "@/lib/services/user/onboarding.service"
 
 const defaultDocuments: OnboardingDocument[] = [
   { id: "id", name: "Identificación Oficial", fileName: null, uploaded: false },
@@ -23,19 +24,39 @@ type OnboardingContextType = {
   currentStep: number
   setCurrentStep: (step: number) => void
   data: OnboardingData
+  // token de invitacion — requerido para el flujo de registro
+  invitationToken: string
+  setInvitationToken: (token: string) => void
   updatePersonalInfo: (info: Partial<PersonalInfo>) => void
-  uploadDocument: (id: string, file: File) => void
+  // sube el archivo al backend (Cloudinary) y guarda la URL en el estado
+  uploadDocument: (id: string, file: File) => Promise<void>
+  // solo elimina el estado local sin borrar de Cloudinary
   removeDocument: (id: string) => void
   acceptContract: (signature: string) => void
   updatePayment: (info: Partial<PaymentInfo>) => void
   resetOnboarding: () => void
+  // error de upload para mostrar feedback al usuario
+  uploadError: string | null
 }
 
 const OnboardingContext = createContext<OnboardingContextType | null>(null)
 
-export function OnboardingProvider({ children }: { children: ReactNode }) {
+export function OnboardingProvider({
+  children,
+  initialToken = "",
+  initialEmail = "",
+}: {
+  children: ReactNode
+  initialToken?: string
+  initialEmail?: string
+}) {
   const [currentStep, setCurrentStep] = useState(0)
-  const [data, setData] = useState<OnboardingData>(initialData)
+  const [invitationToken, setInvitationToken] = useState(initialToken)
+  const [uploadError, setUploadError] = useState<string | null>(null)
+  const [data, setData] = useState<OnboardingData>(() => ({
+    ...initialData,
+    personalInfo: { ...initialData.personalInfo, email: initialEmail },
+  }))
 
   const updatePersonalInfo = (info: Partial<PersonalInfo>) => {
     setData((prev) => ({
@@ -44,20 +65,44 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
     }))
   }
 
-  const uploadDocument = (id: string, file: File) => {
+  // sube el archivo al backend y almacena la URL cloudinary en el documento
+  const uploadDocument = async (id: string, file: File) => {
+    setUploadError(null)
+    // optimistic UI — muestra el nombre del archivo de inmediato
     setData((prev) => ({
       ...prev,
       documents: prev.documents.map((doc) =>
-        doc.id === id ? { ...doc, fileName: file.name, uploaded: true } : doc
+        doc.id === id ? { ...doc, fileName: file.name, uploaded: false } : doc
       ),
     }))
+
+    try {
+      const result = await onboardingService.uploadDocument(invitationToken, id, file)
+      setData((prev) => ({
+        ...prev,
+        documents: prev.documents.map((doc) =>
+          doc.id === id
+            ? { ...doc, fileName: file.name, uploaded: true, url: result.url }
+            : doc
+        ),
+      }))
+    } catch {
+      // revert optimistic update y muestra error
+      setData((prev) => ({
+        ...prev,
+        documents: prev.documents.map((doc) =>
+          doc.id === id ? { ...doc, fileName: null, uploaded: false, url: undefined } : doc
+        ),
+      }))
+      setUploadError("Error al subir el archivo. Intenta de nuevo.")
+    }
   }
 
   const removeDocument = (id: string) => {
     setData((prev) => ({
       ...prev,
       documents: prev.documents.map((doc) =>
-        doc.id === id ? { ...doc, fileName: null, uploaded: false } : doc
+        doc.id === id ? { ...doc, fileName: null, uploaded: false, url: undefined } : doc
       ),
     }))
   }
@@ -82,7 +127,9 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
 
   const resetOnboarding = () => {
     setCurrentStep(0)
-    setData(initialData)
+    setData({ ...initialData, personalInfo: { ...initialData.personalInfo, email: "" } })
+    setInvitationToken("")
+    setUploadError(null)
   }
 
   return (
@@ -91,12 +138,15 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
         currentStep,
         setCurrentStep,
         data,
+        invitationToken,
+        setInvitationToken,
         updatePersonalInfo,
         uploadDocument,
         removeDocument,
         acceptContract,
         updatePayment,
         resetOnboarding,
+        uploadError,
       }}
     >
       {children}

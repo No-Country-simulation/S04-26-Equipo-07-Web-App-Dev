@@ -3,6 +3,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { useOnboarding } from "@/modules/onboarding/hooks/useOnboarding"
 import { contractSchema } from "@/stores/onboardingSchemas"
 import { useState, useCallback } from "react"
+import { ExternalLink, FileSignature, ShieldCheck } from "lucide-react"
 
 type FieldErrors = Record<string, string>
 
@@ -11,6 +12,7 @@ export default function ContractStep() {
   const { contract } = data
   const [errors, setErrors] = useState<FieldErrors>({})
   const [touched, setTouched] = useState<Record<string, boolean>>({})
+  const [openSignRequested, setOpenSignRequested] = useState(false)
 
   const validate = useCallback(() => {
     const result = contractSchema.safeParse(contract)
@@ -45,8 +47,17 @@ export default function ContractStep() {
     if (touched.signature) validate()
   }
 
+  // abre el portal OpenSign en nueva pestaña para la firma electronica avanzada
+  const handleOpenSign = () => {
+    // URL del portal OpenSign sandbox — en produccion apunta al documento generado
+    const opensignUrl = `https://app.opensignlabs.com/`
+    window.open(opensignUrl, "_blank", "noopener,noreferrer")
+    setOpenSignRequested(true)
+  }
+
   return (
     <div className="space-y-8">
+      {/* contenido del contrato */}
       <div className="border border-color-border bg-color-surface max-h-80 overflow-y-auto p-6">
         <div className="space-y-4 text-sm text-on-surface-variant">
           <h3 className="font-heading-sm text-white text-base uppercase tracking-widest">
@@ -98,6 +109,78 @@ export default function ContractStep() {
             términos y condiciones establecidos anteriormente.
           </p>
         </div>
+      </div>
+
+      {/* OpenSign — firma electronica avanzada */}
+      <div className="border border-color-border bg-color-surface p-6 space-y-4">
+        <div className="flex items-center gap-3">
+          <FileSignature size={18} className="text-primary-container" />
+          <h4 className="font-caption-mono text-caption-mono uppercase tracking-widest text-white text-xs">
+            Firma Digital con OpenSign
+          </h4>
+        </div>
+        <p className="font-body text-body-sm text-on-surface-variant text-sm">
+          Para una firma electrónica con validez legal avanzada, puedes usar OpenSign.
+          Tu firma quedará registrada con sello de tiempo y certificado criptográfico.
+        </p>
+        <button
+          type="button"
+          onClick={handleOpenSign}
+          className="flex items-center gap-2 px-4 py-2 border border-primary-container/40 text-primary-container hover:bg-primary-container/10 transition-all font-caption-mono text-caption-mono uppercase tracking-widest text-xs"
+        >
+          <ExternalLink size={12} />
+          Abrir Portal OpenSign
+        </button>
+        {openSignRequested && (
+          <div className="flex items-center gap-2 border border-primary-container/20 bg-primary-container/5 px-4 py-2">
+            <ShieldCheck size={14} className="text-primary-container" />
+            <p className="font-caption-mono text-caption-mono text-primary-container text-xs">
+              Portal abierto — completa la firma y regresa para continuar.
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* firma electronica simple (nombre) */}
+      <div className="space-y-2">
+        <label className="font-caption-mono text-caption-mono uppercase tracking-widest text-primary-container">
+          Firma Electrónica (Nombre Completo)
+        </label>
+        <Input
+          value={contract.signature || data.personalInfo.fullName}
+          onChange={(e) => handleSignatureChange(e.target.value)}
+          onBlur={() => handleBlur("signature")}
+          placeholder="Escribe tu nombre completo como firma"
+          className="font-display text-lg tracking-wide"
+        />
+        {touched.signature && errors.signature && (
+          <p className="font-caption-mono text-caption-mono text-color-warning">{errors.signature}</p>
+        )}
+        <p className="font-caption-mono text-caption-mono text-on-surface-variant mt-1">
+          Tu nombre escrito constituye tu firma electrónica vinculante conforme a la legislación aplicable.
+        </p>
+      </div>
+
+      <div className="space-y-2">
+        <label className="flex items-start gap-3 cursor-pointer group">
+          <Checkbox
+            checked={contract.accepted}
+            onCheckedChange={(checked) => handleAcceptChange(checked as boolean)}
+            className="mt-0.5"
+          />
+          <span className="font-body text-body text-on-surface-variant group-hover:text-white transition-colors">
+            He leído y acepto los términos y condiciones del Contrato de Servicios de NorthPay,
+            incluyendo las cláusulas de confidencialidad y cumplimiento fiscal.
+          </span>
+        </label>
+        {touched.accepted && errors.accepted && (
+          <p className="font-caption-mono text-caption-mono text-color-warning">{errors.accepted}</p>
+        )}
+      </div>
+    </div>
+  )
+}
+
       </div>
 
       <div className="space-y-2">

@@ -3,10 +3,12 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { requestService } from '@/lib/services/worker/request.service'
 import { createSocketClient } from '@/lib/websocket/socket'
 import { Client } from '@stomp/stompjs'
-import { RefreshCw, Eye, CheckCircle, Clock, X } from 'lucide-react'
+import { RefreshCw, Eye, CheckCircle, Clock, X, ExternalLink } from 'lucide-react'
 
 type DocReview = { documentKey: string; status: string; observation?: string }
 type ActionEntry = { workerId: string; action: string; notes: string; timestamp: string }
+type PaymentSummary = { bankName?: string; accountType?: string; currency?: string }
+type ContractSummary = { signature?: string; signedAt?: string; accepted?: boolean }
 type Request = {
   id: string
   userId: string
@@ -16,6 +18,10 @@ type Request = {
   actionHistory: ActionEntry[]
   createdAt: string
   updatedAt: string
+  // campos del onboarding completo
+  documentUrls?: Record<string, string>
+  paymentSummary?: PaymentSummary
+  contractSummary?: ContractSummary
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -102,6 +108,86 @@ function DetailPanel({ req, onClose }: { req: Request; onClose: () => void }) {
                     <span className="ml-2 font-mono text-[10px] text-[#baccaf]">{a.notes}</span>
                   </div>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {/* documentos subidos a cloudinary */}
+          {req.documentUrls && Object.keys(req.documentUrls).length > 0 && (
+            <div>
+              <p className="mb-2 font-mono text-[10px] uppercase tracking-wider text-[#baccaf]">Documentos Subidos</p>
+              <div className="space-y-1">
+                {Object.entries(req.documentUrls).map(([key, url]) => (
+                  <div key={key} className="flex items-center justify-between border border-[#3c4b35] px-4 py-2">
+                    <span className="font-mono text-[11px] text-[#dae6d0] capitalize">{key}</span>
+                    <a
+                      href={url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1 font-mono text-[10px] text-[#42ff00] hover:text-[#a0ff80] transition-colors"
+                    >
+                      <ExternalLink size={10} />
+                      Ver
+                    </a>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* metodo de pago */}
+          {req.paymentSummary && (req.paymentSummary.bankName || req.paymentSummary.accountType) && (
+            <div>
+              <p className="mb-2 font-mono text-[10px] uppercase tracking-wider text-[#baccaf]">Método de Pago</p>
+              <div className="border border-[#3c4b35] bg-[#141e10] p-4 grid grid-cols-3 gap-4">
+                {req.paymentSummary.bankName && (
+                  <div>
+                    <p className="font-mono text-[9px] uppercase tracking-widest text-[#3c4b35]">Banco</p>
+                    <p className="font-mono text-[11px] text-[#dae6d0]">{req.paymentSummary.bankName}</p>
+                  </div>
+                )}
+                {req.paymentSummary.accountType && (
+                  <div>
+                    <p className="font-mono text-[9px] uppercase tracking-widest text-[#3c4b35]">Tipo</p>
+                    <p className="font-mono text-[11px] text-[#dae6d0] capitalize">{req.paymentSummary.accountType}</p>
+                  </div>
+                )}
+                {req.paymentSummary.currency && (
+                  <div>
+                    <p className="font-mono text-[9px] uppercase tracking-widest text-[#3c4b35]">Moneda</p>
+                    <p className="font-mono text-[11px] text-[#dae6d0]">{req.paymentSummary.currency}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* informacion del contrato */}
+          {req.contractSummary && req.contractSummary.signature && (
+            <div>
+              <p className="mb-2 font-mono text-[10px] uppercase tracking-wider text-[#baccaf]">Contrato</p>
+              <div className="border border-[#3c4b35] bg-[#141e10] p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-mono text-[9px] uppercase tracking-widest text-[#3c4b35]">Firma</p>
+                    <p className="font-mono text-[11px] text-[#dae6d0]">{req.contractSummary.signature}</p>
+                  </div>
+                  <span className={`border px-2 py-0.5 font-mono text-[9px] uppercase tracking-wider ${
+                    req.contractSummary.accepted
+                      ? 'border-[#42ff00] text-[#42ff00]'
+                      : 'border-[#ffb4ab] text-[#ffb4ab]'
+                  }`}>
+                    {req.contractSummary.accepted ? 'Aceptado' : 'Pendiente'}
+                  </span>
+                </div>
+                {req.contractSummary.signedAt && (
+                  <div>
+                    <p className="font-mono text-[9px] uppercase tracking-widest text-[#3c4b35]">Firmado</p>
+                    <p className="font-mono text-[11px] text-[#dae6d0]">
+                      {new Date(req.contractSummary.signedAt).toLocaleString('es-AR')}
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           )}
