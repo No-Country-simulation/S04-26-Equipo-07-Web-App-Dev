@@ -8,6 +8,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -37,8 +38,8 @@ public class RequestController {
     @PutMapping("/{id}/assign")
     public ResponseEntity<OnboardingRequest> assign(
             @PathVariable String id,
-            @AuthenticationPrincipal(expression = "username") String workerId) {
-        return ResponseEntity.ok(requestService.assignWorker(id, workerId));
+            @AuthenticationPrincipal UserDetails principal) {
+        return ResponseEntity.ok(requestService.assignWorker(id, principal.getUsername()));
     }
 
     @PutMapping("/{id}/documents/{key}/review")
@@ -46,16 +47,16 @@ public class RequestController {
             @PathVariable String id,
             @PathVariable String key,
             @Valid @RequestBody ReviewDocumentRequest dto,
-            @AuthenticationPrincipal(expression = "username") String workerId) {
+            @AuthenticationPrincipal UserDetails principal) {
         dto.setDocumentKey(key);
-        return ResponseEntity.ok(requestService.reviewDocument(id, workerId, dto));
+        return ResponseEntity.ok(requestService.reviewDocument(id, principal.getUsername(), dto));
     }
 
     @PutMapping("/{id}/status")
     public ResponseEntity<OnboardingRequest> updateStatus(
             @PathVariable String id,
             @Valid @RequestBody UpdateRequestStatusRequest dto,
-            @AuthenticationPrincipal(expression = "username") String workerId) {
-        return ResponseEntity.ok(requestService.updateStatus(id, workerId, dto));
+            @AuthenticationPrincipal UserDetails principal) {
+        return ResponseEntity.ok(requestService.updateStatus(id, principal.getUsername(), dto));
     }
 }

@@ -8,6 +8,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -21,7 +22,8 @@ public class InvitationController {
     @PostMapping
     public ResponseEntity<Invitation> sendInvitation(
             @Valid @RequestBody InvitationRequest req,
-            @AuthenticationPrincipal(expression = "username") String workerId) {
+            @AuthenticationPrincipal UserDetails principal) {
+        String workerId = (principal != null) ? principal.getUsername() : null;
         if (workerId == null || workerId.isBlank()) {
             throw new AuthException("usuario no autenticado");
         }
