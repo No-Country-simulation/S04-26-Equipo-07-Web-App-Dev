@@ -106,3 +106,19 @@ Dirigido al equipo de operaciones de NorthPay:
 - Eliminación de procesos manuales y dispersos
 
 ---
+
+# Cuentas de autenticacion
+
+## Administradores (`/admin`)
+
+| Email | Contraseña | Roles |
+|---------|------------|--------|
+| admin@northpay.com | Admin1234! | REVISOR + SUPERVISOR + ADMIN_OP |
+| carlos.mendoza@northpay.com | Revisor1234! | REVISOR |
+
+## Users / Clientes (`/user`)
+
+| Email | Contraseña | Créditos |
+|---------|------------|-----------|
+| rolando.hermesto@example.com | User1234! | 50 |
+| maria.santos@example.com | User1234! | 120 |
