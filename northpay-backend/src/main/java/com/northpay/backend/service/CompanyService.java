@@ -31,7 +31,9 @@ public class CompanyService {
         }
 
         return companyRepository.findByIdIn(user.getCompanyIds());
-    }(String actorId, String companyId) {
+    }
+
+    public Company getByIdForActor(String actorId, String companyId) {
         Company company = companyRepository.findById(companyId)
                 .orElseThrow(() -> new ResourceNotFoundException("empresa no encontrada: " + companyId));
 
