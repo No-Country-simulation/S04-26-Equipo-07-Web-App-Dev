@@ -5,6 +5,7 @@ import com.northpay.backend.model.Company;
 import com.northpay.backend.model.User;
 import com.northpay.backend.repository.CompanyRepository;
 import com.northpay.backend.repository.UserRepository;
+import com.northpay.backend.service.LogService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +18,7 @@ public class CompanyService {
 
     private final CompanyRepository companyRepository;
     private final UserRepository userRepository;
+    private final LogService logService;
 
     public List<Company> listByActor(String actorId) {
         User user = userRepository.findById(actorId).orElse(null);
@@ -29,9 +31,7 @@ public class CompanyService {
         }
 
         return companyRepository.findByIdIn(user.getCompanyIds());
-    }
-
-    public Company getByIdForActor(String actorId, String companyId) {
+    }(String actorId, String companyId) {
         Company company = companyRepository.findById(companyId)
                 .orElseThrow(() -> new ResourceNotFoundException("empresa no encontrada: " + companyId));
 
@@ -63,6 +63,7 @@ public class CompanyService {
             }
         }
 
+        logService.logUser(actorId, "COMPANY_CREATED", "empresa creada: " + created.getName());
         return created;
     }
 
@@ -79,6 +80,7 @@ public class CompanyService {
         if (payload.getStatus() != null && !payload.getStatus().isBlank()) {
             existing.setStatus(payload.getStatus());
         }
+        logService.logUser(actorId, "COMPANY_UPDATED", "empresa actualizada: " + existing.getName());
         return companyRepository.save(existing);
     }
 }

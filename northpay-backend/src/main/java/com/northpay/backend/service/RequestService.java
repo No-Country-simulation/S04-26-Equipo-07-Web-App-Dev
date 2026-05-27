@@ -7,6 +7,7 @@ import com.northpay.backend.model.OnboardingRequest;
 import com.northpay.backend.model.User;
 import com.northpay.backend.repository.OnboardingRequestRepository;
 import com.northpay.backend.repository.UserRepository;
+import com.northpay.backend.service.LogService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -24,6 +25,7 @@ public class RequestService {
     private final AuthService authService;
     private final EmailService emailService;
     private final NotificationService notificationService;
+    private final LogService logService;
 
     public List<OnboardingRequest> findAll() {
         return requestRepository.findAll();
@@ -46,6 +48,8 @@ public class RequestService {
         addAction(req, workerId, "ASSIGNED", "trabajador asignado");
         OnboardingRequest saved = requestRepository.save(req);
         notificationService.notifyUser(req.getUserId(), Map.of("status", "IN_REVIEW"));
+        logService.logWorker(workerId, "REQUEST_ASSIGNED", "solicitud " + requestId + " asignada");
+        logService.logUser(req.getUserId(), "REQUEST_IN_REVIEW", "solicitud en revision");
         return saved;
     }
 
@@ -88,6 +92,9 @@ public class RequestService {
         }
 
         notificationService.notifyUser(req.getUserId(), Map.of("documentKey", dto.getDocumentKey(), "status", dto.getStatus()));
+        logService.logWorker(workerId, "DOCUMENT_REVIEWED",
+            requestId + " | " + dto.getDocumentKey() + " = " + dto.getStatus());
+        logService.logUser(req.getUserId(), "DOCUMENT_" + dto.getStatus(), dto.getDocumentKey());
         return saved;
     }
 
@@ -112,6 +119,9 @@ public class RequestService {
 
         notificationService.notifyUser(req.getUserId(), Map.of("requestStatus", dto.getStatus()));
         notificationService.notifyWorkers(Map.of("requestId", requestId, "status", dto.getStatus()));
+        logService.logWorker(workerId, "REQUEST_STATUS_UPDATED",
+            requestId + " → " + dto.getStatus());
+        logService.logUser(req.getUserId(), "REQUEST_" + dto.getStatus(), dto.getNotes() != null ? dto.getNotes() : "");
         return saved;
     }
 

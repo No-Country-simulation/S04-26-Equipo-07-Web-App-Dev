@@ -7,6 +7,7 @@ import com.northpay.backend.model.Convocatoria;
 import com.northpay.backend.model.User;
 import com.northpay.backend.repository.ConvocatoriaRepository;
 import com.northpay.backend.repository.UserRepository;
+import com.northpay.backend.service.LogService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -19,6 +20,7 @@ public class ConvocatoriaService {
 
     private final ConvocatoriaRepository convocatoriaRepository;
     private final UserRepository userRepository;
+    private final LogService logService;
 
     @Value("${credits.convocatoria-cost:5}")
     private double convocatoriaCost;
@@ -49,7 +51,9 @@ public class ConvocatoriaService {
         user.setCredits(user.getCredits() - convocatoriaCost);
         userRepository.save(user);
 
-        return convocatoriaRepository.save(conv);
+        Convocatoria saved = convocatoriaRepository.save(conv);
+        logService.logUser(userId, "CONVOCATORIA_CREATED", "convocatoria creada: " + conv.getTitle());
+        return saved;
     }
 
     public List<Convocatoria> findByUser(String userId) {
