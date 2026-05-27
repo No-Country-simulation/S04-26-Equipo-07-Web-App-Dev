@@ -4,6 +4,7 @@ import com.northpay.backend.security.JwtFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -40,10 +41,14 @@ public class SecurityConfig {
                     "/api/worker/auth/**",
                     "/api/invitations/validate",
                     "/api/payments/webhook",
+                    "/api/convocatorias/*/apply",
+                    "/api/convocatorias/*/view",
+                    "/api/convocatorias/cost-estimate",
                     "/swagger-ui/**",
                     "/v3/api-docs/**",
                     "/ws/**"
                 ).permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/convocatorias/*").permitAll()
                 .requestMatchers("/api/worker/**").hasRole("WORKER")
                 .requestMatchers("/api/users/**").hasRole("USER")
                 .requestMatchers("/api/companies/**").hasAnyRole("USER", "WORKER")

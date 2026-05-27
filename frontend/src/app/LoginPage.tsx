@@ -26,24 +26,23 @@ export const LoginPage = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-zinc-50 px-4">
-      <div className="w-full max-w-md rounded-2xl border bg-secondary p-8 shadow-sm">
-
+    <div className="min-h-screen flex items-center justify-center bg-[#0c1609] px-4">
+      <div className="w-full max-w-md border border-[#3c4b35] bg-[#182214] p-8">
         <div className="mb-6 space-y-2 text-center">
-          <h1 className="text-3xl font-bold tracking-tight">
-            Bienvenido de nuevo
+          <h1 className="font-mono text-3xl font-bold uppercase tracking-widest text-[#f0ffe4]">
+            Acceso Usuario
           </h1>
 
-          <p className="text-sm text-muted-foreground">
-            Inicia sesión para acceder al panel de control de NorthPay
+          <p className="font-mono text-[11px] uppercase tracking-wider text-[#baccaf]">
+            Inicia sesion para acceder al panel NorthPay
           </p>
         </div>
 
-        <form className="space-y-4">
+        <form className="space-y-4" onSubmit={handleSubmit}>
           <div>
             <label
               htmlFor="email"
-              className="mb-2 block text-sm font-medium"
+              className="mb-2 block font-mono text-[10px] uppercase tracking-wider text-[#baccaf]"
             >
               Email
             </label>
@@ -54,13 +53,14 @@ export const LoginPage = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="name@company.com"
+              className="border-[#3c4b35] bg-[#232d1e] font-mono text-[#dae6d0] placeholder:text-[#3c4b35] focus-visible:ring-0 focus-visible:border-[#42ff00]"
             />
           </div>
 
           <div>
             <label
               htmlFor="password"
-              className="mb-2 block text-sm font-medium"
+              className="mb-2 block font-mono text-[10px] uppercase tracking-wider text-[#baccaf]"
             >
               Password
             </label>
@@ -71,20 +71,21 @@ export const LoginPage = () => {
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              className="border-[#3c4b35] bg-[#232d1e] font-mono text-[#dae6d0] placeholder:text-[#3c4b35] focus-visible:ring-0 focus-visible:border-[#42ff00]"
             />
           </div>
           {error && (
-            <p className="text-sm text-red-500">
+            <p className="font-mono text-[10px] uppercase tracking-wider text-[#ffb4ab]">
               {error}
             </p>
           )}
 
-          <Button className="w-full"
-            onClick={handleSubmit}
-          >
-            {loading ? "Iniciando sesión..." : "Iniciar Sesión"}
+          <Button type="submit" className="w-full border border-[#42ff00] bg-[#42ff00] font-mono text-[11px] uppercase tracking-wider text-[#083900] hover:brightness-110">
+            {loading ? "Iniciando sesion..." : "Iniciar Sesion"}
           </Button>
-          <a href="register" className="text-sm text-muted-foreground">¿No tienes una cuenta? <span className="underline hover:text-primary">Registrate</span></a>
+          <a href="/register" className="block text-center font-mono text-[10px] uppercase tracking-wider text-[#baccaf] hover:text-[#42ff00]">
+            No tienes cuenta? <span className="underline">Registrate</span>
+          </a>
         </form>
       </div>
     </div>

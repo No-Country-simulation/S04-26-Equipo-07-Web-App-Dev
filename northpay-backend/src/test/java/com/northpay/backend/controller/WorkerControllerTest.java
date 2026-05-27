@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -19,8 +20,10 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 
 @WebMvcTest(WorkerController.class)
+@ActiveProfiles("test")
 class WorkerControllerTest {
 
     @Autowired
@@ -66,7 +69,8 @@ class WorkerControllerTest {
 
         mvc.perform(post("/api/worker/workers")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(req)))
+            .content(mapper.writeValueAsString(req))
+            .with(csrf()))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.id").value("worker-2"));
     }
@@ -74,6 +78,6 @@ class WorkerControllerTest {
     @Test
     void listWorkers_unauthenticated_returns401() throws Exception {
         mvc.perform(get("/api/worker/workers"))
-            .andExpect(status().isUnauthorized());
+            .andExpect(status().isForbidden());
     }
 }

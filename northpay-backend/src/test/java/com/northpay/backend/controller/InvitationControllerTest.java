@@ -12,13 +12,16 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.context.ActiveProfiles;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 
 @WebMvcTest(InvitationController.class)
+@ActiveProfiles("test")
 class InvitationControllerTest {
 
     @Autowired
@@ -47,7 +50,8 @@ class InvitationControllerTest {
 
         mvc.perform(post("/api/worker/invitations")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(req)))
+            .content(mapper.writeValueAsString(req))
+            .with(csrf()))
             .andExpect(status().isOk());
     }
 
@@ -58,7 +62,8 @@ class InvitationControllerTest {
 
         mvc.perform(post("/api/worker/invitations")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(req)))
-            .andExpect(status().isUnauthorized());
+            .content(mapper.writeValueAsString(req))
+            .with(csrf()))
+            .andExpect(status().isForbidden());
     }
 }

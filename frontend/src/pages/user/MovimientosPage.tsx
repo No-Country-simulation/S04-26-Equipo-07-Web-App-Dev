@@ -1,5 +1,9 @@
-import { useQuery } from '@tanstack/react-query'
+import { useEffect, useRef, useState } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useSearchParams } from 'react-router-dom'
+import confetti from 'canvas-confetti'
 import { paymentService } from '@/lib/services/user/payment.service'
+import { CheckCircle, XCircle, X } from 'lucide-react'
 
 type Payment = { id: string; amount: number; status: string; createdAt: string }
 
@@ -15,7 +19,47 @@ function statusDot(status: string) {
   return 'bg-[#ffe066]'
 }
 
+// dispara confetti verde al confirmar pago exitoso
+function fireConfetti() {
+  confetti({
+    particleCount: 120,
+    spread: 80,
+    origin: { y: 0.6 },
+    colors: ['#42ff00', '#dae6d0', '#f0ffe4', '#3c4b35'],
+  })
+  setTimeout(() => confetti({ particleCount: 60, spread: 60, origin: { y: 0.5 }, colors: ['#42ff00', '#baccaf'] }), 300)
+}
+
 export default function MovimientosPage() {
+  const qc = useQueryClient()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const stripeResult = searchParams.get('stripe')
+  const paymentId = searchParams.get('paymentId')
+  const [banner, setBanner] = useState<'success' | 'cancel' | null>(null)
+  const fired = useRef(false)
+
+  // detecta retorno de stripe: llama al endpoint de verificacion para acreditar y luego muestra confetti
+  useEffect(() => {
+    if (stripeResult === 'success' && !fired.current) {
+      fired.current = true
+      setSearchParams({}, { replace: true })
+      const confirm = () => {
+        setBanner('success')
+        fireConfetti()
+        qc.invalidateQueries({ queryKey: ['payments'] })
+        qc.invalidateQueries({ queryKey: ['balance'] })
+      }
+      if (paymentId) {
+        paymentService.verifyPayment(paymentId).then(confirm).catch(confirm)
+      } else {
+        confirm()
+      }
+    } else if (stripeResult === 'cancel') {
+      setBanner('cancel')
+      setSearchParams({}, { replace: true })
+    }
+  }, [stripeResult, paymentId, qc, setSearchParams])
+
   const { data: payments = [], isLoading } = useQuery<Payment[]>({
     queryKey: ['payments'],
     queryFn: () => paymentService.getHistory().then(r => r.data),
@@ -25,6 +69,37 @@ export default function MovimientosPage() {
 
   return (
     <div className="p-8">
+      {/* banner de resultado de pago */}
+      {banner === 'success' && (
+        <div className="mb-6 flex items-center justify-between border border-[#42ff00] bg-[#42ff00]/10 px-5 py-4">
+          <div className="flex items-center gap-3">
+            <CheckCircle size={18} className="text-[#42ff00]" />
+            <div>
+              <p className="font-mono text-[12px] font-bold uppercase tracking-wider text-[#42ff00]">
+                Pago exitoso
+              </p>
+              <p className="font-mono text-[10px] text-[#baccaf]">
+                Tus créditos han sido acreditados. El saldo se actualizará en breve.
+              </p>
+            </div>
+          </div>
+          <button onClick={() => setBanner(null)} className="text-[#baccaf] hover:text-[#f0ffe4]">
+            <X size={16} />
+          </button>
+        </div>
+      )}
+      {banner === 'cancel' && (
+        <div className="mb-6 flex items-center justify-between border border-[#ffb4ab]/40 bg-[#ffb4ab]/5 px-5 py-4">
+          <div className="flex items-center gap-3">
+            <XCircle size={18} className="text-[#ffb4ab]" />
+            <p className="font-mono text-[12px] text-[#ffb4ab]">Pago cancelado. No se realizó ningún cargo.</p>
+          </div>
+          <button onClick={() => setBanner(null)} className="text-[#baccaf] hover:text-[#f0ffe4]">
+            <X size={16} />
+          </button>
+        </div>
+      )}
+
       <header className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
           <h2 className="text-[28px] font-bold text-[#f0ffe4]">Movimientos</h2>
@@ -93,3 +168,4 @@ export default function MovimientosPage() {
     </div>
   )
 }
+

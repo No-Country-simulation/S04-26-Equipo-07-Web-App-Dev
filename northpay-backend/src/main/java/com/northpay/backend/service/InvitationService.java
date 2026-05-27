@@ -5,6 +5,7 @@ import com.northpay.backend.model.Invitation;
 import com.northpay.backend.model.Worker;
 import com.northpay.backend.repository.InvitationRepository;
 import com.northpay.backend.repository.WorkerRepository;
+import com.northpay.backend.service.LogService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -20,6 +21,7 @@ public class InvitationService {
     private final InvitationRepository invitationRepository;
     private final WorkerRepository workerRepository;
     private final EmailService emailService;
+    private final LogService logService;
 
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
@@ -46,6 +48,7 @@ public class InvitationService {
             .orElseThrow(() -> new InvitationException("trabajador no encontrado"));
 
         emailService.sendInvitationEmail(email, token, worker.getFirstName() + " " + worker.getLastName());
+        logService.logWorker(workerId, "INVITATION_SENT", "invitacion enviada a: " + email);
         return invitation;
     }
 

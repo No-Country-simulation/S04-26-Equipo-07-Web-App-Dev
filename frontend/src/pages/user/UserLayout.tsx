@@ -1,6 +1,8 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { useUserAuth } from '@/contexts/UserAuthContext'
-import { LayoutDashboard, Building2, Megaphone, ArrowLeftRight, LogOut } from 'lucide-react'
+import { LayoutDashboard, Building2, Megaphone, ArrowLeftRight, LogOut, Plus } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import LoadCreditsModal from '@/components/user/LoadCreditsModal'
 
 const NAV = [
   { to: '/dashboard',              label: 'Dashboard',     icon: LayoutDashboard, end: true },
@@ -10,8 +12,11 @@ const NAV = [
 ]
 
 export default function UserLayout() {
-  const { logout, credits } = useUserAuth()
+  const { logout, credits, refreshCredits } = useUserAuth()
   const navigate = useNavigate()
+  const [showCreditsModal, setShowCreditsModal] = useState(false)
+
+  useEffect(() => { refreshCredits() }, [refreshCredits])
 
   const handleLogout = () => { logout(); navigate('/login') }
 
@@ -57,10 +62,19 @@ export default function UserLayout() {
         <div className="border-t border-[#3c4b35] p-3 space-y-1">
           <div className="px-3 py-2 border border-[#3c4b35] bg-[#182214]">
             <p className="font-mono text-[9px] uppercase tracking-wider text-[#3c4b35]">Créditos</p>
-            <p className="font-mono text-[18px] font-bold text-[#42ff00] leading-tight">
-              {credits.toFixed(2)}
-              <span className="ml-1 text-[10px] text-[#3c4b35]">USD</span>
-            </p>
+            <div className="flex items-center justify-between">
+              <p className="font-mono text-[18px] font-bold text-[#42ff00] leading-tight">
+                {credits.toFixed(2)}
+                <span className="ml-1 text-[10px] text-[#3c4b35]">USD</span>
+              </p>
+              <button
+                onClick={() => setShowCreditsModal(true)}
+                title="Cargar créditos"
+                className="border border-[#3c4b35] p-1 text-[#42ff00] hover:border-[#42ff00] hover:bg-[#42ff00]/10 transition-colors"
+              >
+                <Plus size={14} />
+              </button>
+            </div>
           </div>
           <button
             onClick={handleLogout}
@@ -76,6 +90,11 @@ export default function UserLayout() {
       <main className="flex-1 overflow-auto bg-[#0c1609]">
         <Outlet />
       </main>
+
+      {/* modal de carga de creditos */}
+      {showCreditsModal && (
+        <LoadCreditsModal onClose={() => setShowCreditsModal(false)} />
+      )}
     </div>
   )
 }

@@ -1,6 +1,7 @@
 package com.northpay.backend.controller;
 
 import com.northpay.backend.dto.invitation.InvitationRequest;
+import com.northpay.backend.exception.AuthException;
 import com.northpay.backend.model.Invitation;
 import com.northpay.backend.service.InvitationService;
 import jakarta.validation.Valid;
@@ -22,7 +23,11 @@ public class InvitationController {
     public ResponseEntity<Invitation> sendInvitation(
             @Valid @RequestBody InvitationRequest req,
             @AuthenticationPrincipal UserDetails principal) {
-        Invitation invitation = invitationService.sendInvitation(req.getEmail(), principal.getUsername());
+        String workerId = (principal != null) ? principal.getUsername() : null;
+        if (workerId == null || workerId.isBlank()) {
+            throw new AuthException("usuario no autenticado");
+        }
+        Invitation invitation = invitationService.sendInvitation(req.getEmail(), workerId);
         return ResponseEntity.ok(invitation);
     }
 }

@@ -5,5 +5,5 @@ export const invitationService = {
     workerAxios.post('/worker/invitations', { email }),
 
   validate: (token: string) =>
-    workerAxios.get(`/api/auth/invitation/validate?token=${token}`),
+    workerAxios.get(`/auth/invitation/validate?token=${encodeURIComponent(token)}`),
 }

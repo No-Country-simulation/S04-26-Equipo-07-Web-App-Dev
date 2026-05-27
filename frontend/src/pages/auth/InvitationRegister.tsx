@@ -7,6 +7,7 @@ import { authService } from '@/lib/services/user/auth.service'
 import { invitationService } from '@/lib/services/worker/invitation.service'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import Onboarding from '../onboarding/Onboarding'
 
 const schema = z.object({
   firstName: z.string().min(1),
@@ -68,6 +69,7 @@ export default function InvitationRegister() {
 
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
+      <Onboarding/>
       <div className="w-full max-w-md space-y-6">
         <h1 className="text-2xl font-bold">Crear cuenta</h1>
         {invitationEmail && <p className="text-sm text-muted-foreground">Cuenta para: {invitationEmail}</p>}

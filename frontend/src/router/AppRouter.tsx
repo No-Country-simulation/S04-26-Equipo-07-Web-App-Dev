@@ -23,10 +23,14 @@ import WorkerConvocatoriasPage from "@/pages/worker/WorkerConvocatoriasPage"
 import LogsUsersPage from "@/pages/worker/LogsUsersPage"
 import LogsWorkersPage from "@/pages/worker/LogsWorkersPage"
 import PersonasPage from "@/pages/worker/PersonasPage"
+import ClientesPage from "@/pages/worker/ClientesPage"
+import MovimientosAdminPage from "@/pages/worker/MovimientosAdminPage"
 import UserLayout from "@/pages/user/UserLayout"
 import UserDashboard from "@/pages/user/UserDashboard"
 import EmpresasPage from "@/pages/user/EmpresasPage"
 import ConvocatoriasPage from "@/pages/user/ConvocatoriasPage"
+import ConvocatoriaPreviewPage from "@/pages/user/ConvocatoriaPreviewPage"
+import ConvocatoriaApplyPage from "@/pages/ConvocatoriaApplyPage"
 import MovimientosPage from "@/pages/user/MovimientosPage"
 
 function AppRouter() {
@@ -41,6 +45,7 @@ function AppRouter() {
 
         <Route path="/register" element={<InvitationRegister />} />
         <Route path="/set-password" element={<SetPassword />} />
+        <Route path="/convocatoria/:id/apply" element={<ConvocatoriaApplyPage />} />
         <Route path="/worker/login" element={<WorkerLogin />} />
 
         {/* rutas del panel de trabajador */}
@@ -55,6 +60,8 @@ function AppRouter() {
           <Route path="logs/users" element={<LogsUsersPage />} />
           <Route path="logs/workers" element={<LogsWorkersPage />} />
           <Route path="personas" element={<PersonasPage />} />
+          <Route path="clientes" element={<ClientesPage />} />
+          <Route path="movimientos" element={<MovimientosAdminPage />} />
         </Route>
 
         {/* rutas del panel de usuario */}
@@ -69,6 +76,7 @@ function AppRouter() {
           <Route index element={<UserDashboard />} />
           <Route path="empresas" element={<EmpresasPage />} />
           <Route path="convocatorias" element={<ConvocatoriasPage />} />
+          <Route path="convocatorias/:id/preview" element={<ConvocatoriaPreviewPage />} />
           <Route path="movimientos" element={<MovimientosPage />} />
         </Route>
 
