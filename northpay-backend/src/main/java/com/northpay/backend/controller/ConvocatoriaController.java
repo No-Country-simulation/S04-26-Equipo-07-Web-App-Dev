@@ -7,7 +7,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,15 +19,15 @@ public class ConvocatoriaController {
     private final ConvocatoriaService convocatoriaService;
 
     @GetMapping
-    public ResponseEntity<List<Convocatoria>> findAll(@AuthenticationPrincipal UserDetails principal) {
+    public ResponseEntity<List<Convocatoria>> findAll(@AuthenticationPrincipal(expression = "username") String userId) {
         // si es trabajador retorna todas, si es usuario retorna las suyas
         // la distincion se hace via el claim type en el jwt (simplificado aqui)
         return ResponseEntity.ok(convocatoriaService.findAll());
     }
 
     @GetMapping("/my")
-    public ResponseEntity<List<Convocatoria>> findMine(@AuthenticationPrincipal UserDetails principal) {
-        return ResponseEntity.ok(convocatoriaService.findByUser(principal.getUsername()));
+    public ResponseEntity<List<Convocatoria>> findMine(@AuthenticationPrincipal(expression = "username") String userId) {
+        return ResponseEntity.ok(convocatoriaService.findByUser(userId));
     }
 
     @GetMapping("/{id}")
@@ -39,8 +38,8 @@ public class ConvocatoriaController {
     @PostMapping
     public ResponseEntity<Convocatoria> create(
             @Valid @RequestBody ConvocatoriaRequest req,
-            @AuthenticationPrincipal UserDetails principal) {
-        return ResponseEntity.ok(convocatoriaService.create(principal.getUsername(), req));
+            @AuthenticationPrincipal(expression = "username") String userId) {
+        return ResponseEntity.ok(convocatoriaService.create(userId, req));
     }
 
     @PutMapping("/{id}/publish")

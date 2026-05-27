@@ -9,10 +9,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -40,13 +43,18 @@ public class JwtFilter extends OncePerRequestFilter {
                 // los roles del token + el rol principal basado en el tipo (user/worker)
                 List<String> roles = jwtUtil.extractRoles(token);
                 List<SimpleGrantedAuthority> authorities = roles != null
-                        ? roles.stream().map(SimpleGrantedAuthority::new).collect(Collectors.toList())
-                        : List.of();
+                    ? roles.stream().map(SimpleGrantedAuthority::new).collect(Collectors.toCollection(ArrayList::new))
+                    : new ArrayList<>();
 
                 authorities.add(new SimpleGrantedAuthority("ROLE_" + type.toUpperCase()));
 
+                UserDetails principal = User.withUsername(subject)
+                    .password("")
+                    .authorities(authorities)
+                    .build();
+
                 UsernamePasswordAuthenticationToken auth =
-                        new UsernamePasswordAuthenticationToken(subject, null, authorities);
+                    new UsernamePasswordAuthenticationToken(principal, null, authorities);
                 auth.setDetails(claims);
                 SecurityContextHolder.getContext().setAuthentication(auth);
             }

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.northpay.backend.dto.payment.CreatePaymentRequest;
 import com.northpay.backend.model.Payment;
 import com.northpay.backend.model.User;
+import com.northpay.backend.repository.PaymentRepository;
 import com.northpay.backend.repository.UserRepository;
 import com.northpay.backend.security.JwtUtil;
 import com.northpay.backend.service.StripeService;
@@ -38,6 +39,9 @@ class PaymentControllerTest {
 
     @MockBean
     UserRepository userRepository;
+
+    @MockBean
+    PaymentRepository paymentRepository;
 
     @MockBean
     JwtUtil jwtUtil;

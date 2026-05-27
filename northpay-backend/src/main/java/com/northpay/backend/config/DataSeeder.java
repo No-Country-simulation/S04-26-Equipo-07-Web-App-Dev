@@ -48,18 +48,29 @@ public class DataSeeder implements CommandLineRunner {
     // ─── modules ────────────────────────────────────────────────────────────────
 
     private void seedModules() {
-        if (appModuleRepository.count() > 0) return;
-        appModuleRepository.saveAll(Arrays.asList(
-            buildModule("Solicitudes",      "gestion de solicitudes de onboarding",      "/worker/requests",       "ClipboardList", "gestion", 1),
-            buildModule("Trabajadores",     "gestion del equipo interno",                "/worker/workers",        "Users",         "gestion", 2),
-            buildModule("Personas",         "directorio de usuarios registrados",         "/worker/personas",       "Users",         "gestion", 3),
-            buildModule("Convocatorias",    "publicacion de convocatorias laborales",     "/worker/convocatorias",  "Megaphone",     "gestion", 4),
-            buildModule("Roles",            "administracion de roles y permisos",         "/worker/roles",          "Shield",        "sistema", 1),
-            buildModule("Modulos",          "gestion de modulos del sistema",             "/worker/modules",        "LayoutGrid",    "sistema", 2),
-            buildModule("Logs Usuarios",    "registros de actividad de usuarios",         "/worker/logs/users",     "ScrollText",    "sistema", 3),
-            buildModule("Logs Trabajadores","registros de actividad del equipo",          "/worker/logs/workers",   "ScrollText",    "sistema", 4)
-        ));
+        upsertModule("Solicitudes",       "gestion de solicitudes de onboarding",    "/worker/requests",       "ClipboardList", "gestion", 1);
+        upsertModule("Trabajadores",      "gestion del equipo interno",              "/worker/workers",        "Users",         "gestion", 2);
+        upsertModule("Personas",          "directorio de usuarios registrados",       "/worker/personas",       "Users",         "gestion", 3);
+        upsertModule("Clientes",          "gestion de clientes e invitaciones",        "/worker/clientes",       "UserRoundPlus", "gestion", 4);
+        upsertModule("Convocatorias",     "publicacion de convocatorias laborales",   "/worker/convocatorias",  "Megaphone",     "gestion", 5);
+        upsertModule("Movimientos",       "consulta de transacciones de usuarios",     "/worker/movimientos",    "ArrowLeftRight", "gestion", 6);
+        upsertModule("Roles",             "administracion de roles y permisos",       "/worker/roles",          "Shield",        "sistema", 1);
+        upsertModule("Modulos",           "gestion de modulos del sistema",           "/worker/modules",        "LayoutGrid",    "sistema", 2);
+        upsertModule("Logs Usuarios",     "registros de actividad de usuarios",       "/worker/logs/users",     "ScrollText",    "sistema", 3);
+        upsertModule("Logs Trabajadores", "registros de actividad del equipo",        "/worker/logs/workers",   "ScrollText",    "sistema", 4);
         log.info("modules seeded");
+    }
+
+    private void upsertModule(String title, String desc, String path, String icon, String group, int order) {
+        AppModule module = appModuleRepository.findByPath(path).orElse(new AppModule());
+        module.setTitle(title);
+        module.setDescription(desc);
+        module.setPath(path);
+        module.setIcon(icon);
+        module.setGroup(group);
+        module.setOrder(order);
+        module.setActive(true);
+        appModuleRepository.save(module);
     }
 
     private AppModule buildModule(String title, String desc, String path, String icon, String group, int order) {
@@ -176,19 +187,40 @@ public class DataSeeder implements CommandLineRunner {
     // ─── companies ──────────────────────────────────────────────────────────────
 
     private void seedCompanies() {
-        if (companyRepository.count() > 0) return;
+        if (companyRepository.count() == 0) {
+            List<User> users = userRepository.findAll();
+            if (users.isEmpty()) return;
+            String uId1 = users.get(0).getId();
+            String uId2 = users.size() > 1 ? users.get(1).getId() : uId1;
 
+            companyRepository.saveAll(Arrays.asList(
+                buildCompany(uId1, "TechSolutions SAC", "TechSol",    "20601234567", "Peru",  "Tecnologia",   "Lima",     "Av. Innovacion 123"),
+                buildCompany(uId1, "LogiPeru S.A.",     "LogiPeru",   "20607654321", "Peru",  "Logistica",    "Callao",   "Jr. Puerto 456"),
+                buildCompany(uId2, "Andina Exports SRL","AndExports",  "20609988776", "Peru",  "Exportacion",  "Arequipa", "Calle Comercio 789")
+            ));
+            log.info("companies seeded");
+        }
+
+        // mantiene consistencia entre users.companyIds y companies existentes
         List<User> users = userRepository.findAll();
-        if (users.isEmpty()) return;
-        String uId1 = users.get(0).getId();
-        String uId2 = users.size() > 1 ? users.get(1).getId() : uId1;
+        List<Company> companies = companyRepository.findAll();
+        if (!users.isEmpty() && !companies.isEmpty()) {
+            User first = users.get(0);
+            List<String> firstIds = new ArrayList<>();
+            firstIds.add(companies.get(0).getId());
+            if (companies.size() > 1) firstIds.add(companies.get(1).getId());
+            first.setCompanyIds(firstIds);
+            userRepository.save(first);
 
-        companyRepository.saveAll(Arrays.asList(
-            buildCompany(uId1, "TechSolutions SAC", "TechSol",    "20601234567", "Peru",  "Tecnologia",   "Lima",     "Av. Innovacion 123"),
-            buildCompany(uId1, "LogiPeru S.A.",     "LogiPeru",   "20607654321", "Peru",  "Logistica",    "Callao",   "Jr. Puerto 456"),
-            buildCompany(uId2, "Andina Exports SRL","AndExports",  "20609988776", "Peru",  "Exportacion",  "Arequipa", "Calle Comercio 789")
-        ));
-        log.info("companies seeded");
+            if (users.size() > 1) {
+                User second = users.get(1);
+                List<String> secondIds = new ArrayList<>();
+                String companyId = companies.size() > 2 ? companies.get(2).getId() : companies.get(0).getId();
+                secondIds.add(companyId);
+                second.setCompanyIds(secondIds);
+                userRepository.save(second);
+            }
+        }
     }
 
     private Company buildCompany(String userId, String name, String tradeName, String taxId,

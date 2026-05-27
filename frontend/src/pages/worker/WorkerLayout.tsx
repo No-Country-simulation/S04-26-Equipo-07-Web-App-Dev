@@ -4,12 +4,12 @@ import { moduleService } from '@/lib/services/worker/module.service'
 import { useWorkerAuth } from '@/contexts/WorkerAuthContext'
 import {
   LogOut, LayoutDashboard, ClipboardList, Users, Shield,
-  LayoutGrid, Megaphone, ScrollText, type LucideIcon,
+  LayoutGrid, Megaphone, ScrollText, ArrowLeftRight, UserRoundPlus, type LucideIcon,
 } from 'lucide-react'
 
 const ICONS: Record<string, LucideIcon> = {
   LayoutDashboard, ClipboardList, Users, Shield,
-  LayoutGrid, Megaphone, ScrollText,
+  LayoutGrid, Megaphone, ScrollText, ArrowLeftRight, UserRoundPlus,
 }
 
 type AppModule = { id: string; title: string; path: string; icon: string; group: string }
