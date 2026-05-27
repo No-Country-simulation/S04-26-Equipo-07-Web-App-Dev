@@ -796,6 +796,86 @@ export default function ConvocatoriasPage() {
         </button>
       </header>
 
+      {/* stripe payment panel */}
+      {showPayment && (
+        <div className="mb-6 border border-[#3c4b35] bg-[#182214] p-6">
+          <p className="mb-4 font-mono text-label-mono-bold uppercase tracking-widest text-[#3c4b35]">
+            — Agregar Créditos (USD)
+          </p>
+          <div className="flex items-center gap-3">
+            <input
+              type="number"
+              min={1}
+              value={paymentAmount}
+              onChange={e => setPaymentAmount(Number(e.target.value))}
+              className="w-32 border border-[#3c4b35] bg-[#232d1e] px-3 py-2 font-mono text-caption-mono text-[#dae6d0] outline-none focus:border-[#42ff00]"
+            />
+            <button
+              onClick={() => payMutation.mutate(paymentAmount)}
+              disabled={payMutation.isPending}
+              className="border border-[#42ff00] bg-[#42ff00] px-5 py-2 font-mono text-[11px] font-bold uppercase tracking-wider text-[#083900] hover:brightness-110 disabled:opacity-50"
+            >
+              {payMutation.isPending ? 'Procesando...' : `Pagar $${paymentAmount}`}
+            </button>
+            <button
+              onClick={() => setShowPayment(false)}
+              className="font-mono text-[10px] uppercase tracking-wider text-[#baccaf] hover:text-[#42ff00]"
+            >
+              Cancelar
+            </button>
+          </div>
+          {payMutation.isError && (
+            <p className="mt-2 font-mono text-[10px] text-[#ffb4ab]">Error al procesar el pago.</p>
+          )}
+        </div>
+      )}
+
+      {/* create form */}
+      {showForm && (
+        <div className="mb-6 border border-[#3c4b35] bg-[#182214] p-6">
+          <p className="mb-4 font-mono text-label-mono-bold uppercase tracking-widest text-[#3c4b35]">
+            — Nueva Convocatoria
+          </p>
+          <form onSubmit={handleSubmit(d => create.mutate(d))} className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <select
+              {...register('companyId')}
+              className="sm:col-span-2 border border-[#3c4b35] bg-[#232d1e] px-3 py-2 font-mono text-caption-mono text-[#dae6d0] outline-none focus:border-[#42ff00]"
+            >
+              <option value="">Selecciona una empresa</option>
+              {companies.map(c => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+            <input
+              {...register('title')}
+              placeholder="Título de la convocatoria"
+              className="sm:col-span-2 border border-[#3c4b35] bg-[#232d1e] px-3 py-2 font-mono text-caption-mono text-[#dae6d0] placeholder:text-[#3c4b35] outline-none focus:border-[#42ff00]"
+            />
+            <input
+              {...register('description')}
+              placeholder="Descripción"
+              className="sm:col-span-2 border border-[#3c4b35] bg-[#232d1e] px-3 py-2 font-mono text-caption-mono text-[#dae6d0] placeholder:text-[#3c4b35] outline-none focus:border-[#42ff00]"
+            />
+            <input
+              {...register('location')}
+              placeholder="Ubicación"
+              className="border border-[#3c4b35] bg-[#232d1e] px-3 py-2 font-mono text-caption-mono text-[#dae6d0] placeholder:text-[#3c4b35] outline-none focus:border-[#42ff00]"
+            />
+            <button
+              type="submit"
+              disabled={create.isPending}
+              className="border border-[#42ff00] bg-[#42ff00] py-2 font-mono text-[11px] font-bold uppercase tracking-wider text-[#083900] hover:brightness-110 disabled:opacity-50"
+            >
+              {create.isPending ? 'Creando...' : 'Publicar'}
+            </button>
+          </form>
+          {create.isError && (
+            <p className="mt-2 font-mono text-[10px] text-[#ffb4ab]">Error al crear la convocatoria.</p>
+          )}
+        </div>
+      )}
+
+      {/* list */}
       <div className="overflow-hidden border border-[#3c4b35] bg-[#182214]">
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-left">
@@ -815,43 +895,24 @@ export default function ConvocatoriasPage() {
                 <tr>
                   <td colSpan={6} className="px-5 py-10 text-center">
                     <p className="font-mono text-[10px] text-[#baccaf]">Sin convocatorias publicadas</p>
-                    <p className="mt-1 font-mono text-[9px] text-[#3c4b35]">Usa el botón "Nueva Convocatoria" para publicar una.</p>
+                    <p className="mt-1 font-mono text-label-mono-bold text-[#3c4b35]">Usa el botón "Nueva Convocatoria" para publicar una.</p>
                   </td>
                 </tr>
-              ) : convocatorias.map(c => {
-                const company = companies.find(co => co.id === c.companyId)
-                return (
-                  <tr key={c.id} className="transition-colors hover:bg-[#42ff00]/5">
-                    <td className="px-5 py-4">
-                      <p className="font-mono text-[12px] font-bold text-[#dae6d0]">{c.title}</p>
-                    </td>
-                    <td className="px-5 py-4 font-mono text-[11px] text-[#baccaf]">
-                      {company?.name ?? c.companyId.slice(-8)}
-                    </td>
-                    <td className="px-5 py-4 font-mono text-[10px] text-[#baccaf]">
-                      {c.startDate ? <>{c.startDate.slice(0, 10)} → {c.endDate?.slice(0, 10)}</> : '—'}
-                    </td>
-                    <td className="px-5 py-4 font-mono text-[11px] text-[#42ff00]">
-                      {c.creditCost > 0 ? `$${c.creditCost}` : '—'}
-                    </td>
-                    <td className="px-5 py-4">
-                      <span className={`flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-wider ${statusColor(c.status)}`}>
-                        <span className="h-1.5 w-1.5 rounded-full bg-current" />
-                        {c.status}
-                      </span>
-                    </td>
-                    <td className="px-5 py-4">
-                      <button
-                        onClick={() => handleRowClick(c)}
-                        className="flex items-center gap-1.5 border border-[#3c4b35] px-3 py-1.5 font-mono text-[10px] uppercase tracking-wider text-[#baccaf] hover:border-[#42ff00] hover:text-[#42ff00] transition-colors"
-                      >
-                        <Eye size={12} />
-                        Ver
-                      </button>
-                    </td>
-                  </tr>
-                )
-              })}
+              ) : convocatorias.map(c => (
+                <tr key={c.id} className="transition-colors hover:bg-[#42ff00]/5">
+                  <td className="px-5 py-4">
+                    <p className="font-mono text-caption-mono font-bold text-[#dae6d0]">{c.title}</p>
+                  </td>
+                  <td className="px-5 py-4 font-mono text-[11px] text-[#baccaf]">{c.companyId.slice(-8)}</td>
+                  <td className="px-5 py-4">
+                    <span className={`flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-wider ${statusColor(c.status)}`}>
+                      <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                      {c.status}
+                    </span>
+                  </td>
+                  <td className="px-5 py-4 font-mono text-[10px] text-[#3c4b35]">{c.id.slice(-8)}</td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>

@@ -50,20 +50,20 @@ function CreateWorkerModal({ onClose }: { onClose: () => void }) {
               <span className="block font-mono text-[10px] uppercase tracking-wider text-[#baccaf] mb-1">Nombre</span>
               <input name="firstName" value={form.firstName} onChange={handleChange}
                 placeholder="Carlos"
-                className="w-full border border-[#3c4b35] bg-[#182214] px-3 py-2 font-mono text-[12px] text-[#dae6d0] placeholder:text-[#3c4b35] outline-none focus:border-[#42ff00]" />
+                className="w-full border border-[#3c4b35] bg-[#182214] px-3 py-2 font-mono text-caption-mono text-[#dae6d0] placeholder:text-[#3c4b35] outline-none focus:border-[#42ff00]" />
             </label>
             <label>
               <span className="block font-mono text-[10px] uppercase tracking-wider text-[#baccaf] mb-1">Apellido</span>
               <input name="lastName" value={form.lastName} onChange={handleChange}
                 placeholder="Mendez"
-                className="w-full border border-[#3c4b35] bg-[#182214] px-3 py-2 font-mono text-[12px] text-[#dae6d0] placeholder:text-[#3c4b35] outline-none focus:border-[#42ff00]" />
+                className="w-full border border-[#3c4b35] bg-[#182214] px-3 py-2 font-mono text-caption-monon-mono text-[#dae6d0] placeholder:text-[#3c4b35] outline-none focus:border-[#42ff00]" />
             </label>
           </div>
           <label>
             <span className="block font-mono text-[10px] uppercase tracking-wider text-[#baccaf] mb-1">Email</span>
             <input name="email" type="email" value={form.email} onChange={handleChange}
               placeholder="trabajador@northpay.com"
-              className="w-full border border-[#3c4b35] bg-[#182214] px-3 py-2 font-mono text-[12px] text-[#dae6d0] placeholder:text-[#3c4b35] outline-none focus:border-[#42ff00]" />
+              className="w-full border border-[#3c4b35] bg-[#182214] px-3 py-2 font-mono text-caption-mono text-[#dae6d0] placeholder:text-[#3c4b35] outline-none focus:border-[#42ff00]" />
           </label>
           <label>
             <span className="block font-mono text-[10px] uppercase tracking-wider text-[#baccaf] mb-1">
@@ -72,7 +72,7 @@ function CreateWorkerModal({ onClose }: { onClose: () => void }) {
             <div className="relative">
               <input name="password" type={showPw ? 'text' : 'password'} value={form.password} onChange={handleChange}
                 placeholder="Min. 8 caracteres"
-                className="w-full border border-[#3c4b35] bg-[#182214] px-3 py-2 pr-10 font-mono text-[12px] text-[#dae6d0] placeholder:text-[#3c4b35] outline-none focus:border-[#42ff00]" />
+                className="w-full border border-[#3c4b35] bg-[#182214] px-3 py-2 pr-10 font-mono text-caption-mono text-[#dae6d0] placeholder:text-[#3c4b35] outline-none focus:border-[#42ff00]" />
               <button type="button" onClick={() => setShowPw(v => !v)}
                 className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#3c4b35] hover:text-[#baccaf]">
                 {showPw ? <EyeOff size={14} /> : <Eye size={14} />}
@@ -161,7 +161,7 @@ export default function WorkersPage() {
                     <div className="flex items-center gap-3">
                       <InitialsAvatar name={`${w.firstName} ${w.lastName}`} />
                       <div>
-                        <p className="font-mono text-[12px] font-bold text-[#dae6d0]">{w.firstName} {w.lastName}</p>
+                        <p className="font-mono text-caption-mono font-bold text-[#dae6d0]">{w.firstName} {w.lastName}</p>
                         <p className="font-mono text-[10px] text-[#3c4b35]">ID: {w.id.slice(-8)}</p>
                       </div>
                     </div>
@@ -172,7 +172,7 @@ export default function WorkersPage() {
                       {w.roleIds.length === 0
                         ? <span className="font-mono text-[10px] text-[#3c4b35]">Sin roles</span>
                         : w.roleIds.map(rid => (
-                          <span key={rid} className="border border-[#3c4b35] px-2 py-0.5 font-mono text-[9px] uppercase text-[#baccaf]">
+                          <span key={rid} className="border border-[#3c4b35] px-2 py-0.5 font-mono text-label-mono-bold uppercase text-[#baccaf]">
                             {rolesMap[rid] ?? rid.slice(-6)}
                           </span>
                         ))

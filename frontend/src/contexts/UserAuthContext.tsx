@@ -1,5 +1,4 @@
 import { createContext, useContext, useState, useCallback } from 'react'
-import type { ReactNode } from 'react'
 import { authService } from '@/lib/services/user/auth.service'
 import userAxios from '@/lib/axios/user.axios'
 
@@ -15,7 +14,7 @@ interface UserAuthContextType {
 
 const UserAuthContext = createContext<UserAuthContextType | null>(null)
 
-export function UserAuthProvider({ children }: { children: ReactNode }) {
+export function UserAuthProvider({ children }: { children: React.ReactNode }) {
   const [token, setToken] = useState<string | null>(() => localStorage.getItem('user_token'))
   const [userId, setUserId] = useState<string | null>(() => localStorage.getItem('user_id'))
   const [credits, setCredits] = useState<number>(() =>
