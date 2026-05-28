@@ -24,6 +24,7 @@ export default function TokenGate() {
     validateToken(token)
       .then((result: InvitationData) => {
         if (result.valid) {
+          sessionStorage.setItem('invitation_token', token)
           setPrefilled(result.prefilled ? { personalInfo: result.prefilled as any } : null)
           setState('valid')
         } else {
@@ -72,7 +73,7 @@ export default function TokenGate() {
         </div>
       </div>
     )
-  } 
+  }
 
   return (
     <OnboardingProvider prefilledData={prefilled ?? undefined}>
