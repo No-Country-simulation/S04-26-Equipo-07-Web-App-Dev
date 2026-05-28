@@ -2,6 +2,5 @@
   "buildCommand": "pnpm build",
   "outputDirectory": "dist",
   "framework": "vite",
-  "installCommand": "pnpm install",
-  "rootDirectory": "frontend"
+  "installCommand": "pnpm install"
 }
