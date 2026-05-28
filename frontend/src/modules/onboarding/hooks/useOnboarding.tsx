@@ -1,6 +1,9 @@
-import { createContext, useContext, useState, useMemo, type ReactNode } from "react"
+import { createContext, useContext, useState, useMemo, useEffect, type ReactNode } from "react"
 import type { OnboardingData, PersonalInfo, PaymentInfo, OnboardingDocument } from "@/types/onboarding"
 import { useUpload } from "@/hooks/useUpload"
+
+//Se agrega un estado de carga para mantener la información de manera persistente durante el proceso de onboarding, incluso si el usuario recarga la página.
+const STORAGE_KEY = 'onboarding_state'
 
 const defaultDocuments: OnboardingDocument[] = [
   { id: "id", name: "Identificación Oficial", fileName: null, uploaded: false },
@@ -42,11 +45,42 @@ type OnboardingContextType = {
 
 const OnboardingContext = createContext<OnboardingContextType | null>(null)
 
-export function OnboardingProvider({ children, prefilledData }: { children: ReactNode; prefilledData?: Partial<OnboardingData> }) {
-  const [currentStep, setCurrentStep] = useState(0)
+export function OnboardingProvider({
+  children,
+  prefilledData,
+}: {
+  children: ReactNode
+  prefilledData?: Partial<OnboardingData>
+}) {
   const initialData = useMemo(() => mergeInitialData(prefilledData), [])
-  const [data, setData] = useState<OnboardingData>(initialData)
+
+  const [currentStep, setCurrentStep] = useState<number>(() => {
+    try {
+      const saved = sessionStorage.getItem(STORAGE_KEY)
+      return saved ? JSON.parse(saved).currentStep ?? 0 : 0
+    } catch {
+      return 0
+    }
+  })
+
+  const [data, setData] = useState<OnboardingData>(() => {
+    try {
+      const saved = sessionStorage.getItem(STORAGE_KEY)
+      return saved ? JSON.parse(saved).data ?? initialData : initialData
+    } catch {
+      return initialData
+    }
+  })
+
   const { upload: cloudinaryUpload, reset: resetUpload } = useUpload()
+
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ currentStep, data }))
+    } catch {
+      // sessionStorage puede fallar en modo privado o si está lleno
+    }
+  }, [currentStep, data])
 
   const updatePersonalInfo = (info: Partial<PersonalInfo>) => {
     setData((prev) => ({
@@ -61,7 +95,9 @@ export function OnboardingProvider({ children, prefilledData }: { children: Reac
     setData((prev) => ({
       ...prev,
       documents: prev.documents.map((doc) =>
-        doc.id === id ? { ...doc, fileName: file.name, uploaded: true, url: result.url } : doc
+        doc.id === id
+          ? { ...doc, fileName: file.name, uploaded: true, url: result?.url }
+          : doc
       ),
     }))
   }
@@ -70,7 +106,7 @@ export function OnboardingProvider({ children, prefilledData }: { children: Reac
     setData((prev) => ({
       ...prev,
       documents: prev.documents.map((doc) =>
-        doc.id === id ? { ...doc, fileName: null, uploaded: false } : doc
+        doc.id === id ? { ...doc, fileName: null, uploaded: false, url: undefined } : doc
       ),
     }))
   }
@@ -96,6 +132,11 @@ export function OnboardingProvider({ children, prefilledData }: { children: Reac
   const resetOnboarding = () => {
     setCurrentStep(0)
     setData(initialData)
+    try {
+      sessionStorage.removeItem(STORAGE_KEY)
+    } catch {
+      // ignore
+    }
   }
 
   return (
