@@ -13,6 +13,7 @@ export default function ContractStep() {
   const [errors, setErrors] = useState<FieldErrors>({})
   const [touched, setTouched] = useState<Record<string, boolean>>({})
   const [openSignRequested, setOpenSignRequested] = useState(false)
+  const [signatureValue, setSignatureValue] = useState(contract.signature || "")
 
   const validate = useCallback(() => {
     const result = contractSchema.safeParse(contract)
@@ -36,14 +37,14 @@ export default function ContractStep() {
 
   const handleAcceptChange = (checked: boolean) => {
     if (!checked) return
-    acceptContract(data.personalInfo.fullName || "Firmante")
+    acceptContract(signatureValue || data.personalInfo.fullName || "Firmante")
     setTouched((prev) => ({ ...prev, accepted: true }))
     setTimeout(validate, 0)
   }
 
   const handleSignatureChange = (value: string) => {
     if (contract.accepted) return
-    acceptContract(value)
+    setSignatureValue(value)
     if (touched.signature) validate()
   }
 
@@ -147,7 +148,7 @@ export default function ContractStep() {
           Firma Electrónica (Nombre Completo)
         </label>
         <Input
-          value={contract.signature || data.personalInfo.fullName}
+          value={contract.accepted ? contract.signature : (signatureValue || data.personalInfo.fullName)}
           onChange={(e) => handleSignatureChange(e.target.value)}
           onBlur={() => handleBlur("signature")}
           placeholder="Escribe tu nombre completo como firma"

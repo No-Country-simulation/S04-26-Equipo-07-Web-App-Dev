@@ -76,7 +76,7 @@ export default function TokenGate() {
   }
 
   return (
-    <OnboardingProvider prefilledData={prefilled ?? undefined}>
+    <OnboardingProvider prefilledData={prefilled ?? undefined} initialToken={token ?? ""}>
       <OnboardingPage inner />
     </OnboardingProvider>
   )

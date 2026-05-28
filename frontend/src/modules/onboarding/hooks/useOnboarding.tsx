@@ -72,7 +72,15 @@ export function OnboardingProvider({
     }
   })
 
-  const [invitationToken, setInvitationToken] = useState(initialToken)
+  const [invitationToken, setInvitationToken] = useState<string>(() => {
+    if (initialToken) return initialToken
+    try {
+      const saved = sessionStorage.getItem(STORAGE_KEY)
+      return saved ? JSON.parse(saved).invitationToken ?? "" : ""
+    } catch {
+      return ""
+    }
+  })
   const [uploadError, setUploadError] = useState<string | null>(null)
 
   const [data, setData] = useState<OnboardingData>(() => {
@@ -86,11 +94,11 @@ export function OnboardingProvider({
 
   useEffect(() => {
     try {
-      sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ currentStep, data }))
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ currentStep, data, invitationToken }))
     } catch {
       // sessionStorage puede fallar en modo privado o si está lleno
     }
-  }, [currentStep, data])
+  }, [currentStep, data, invitationToken])
 
   const updatePersonalInfo = (info: Partial<PersonalInfo>) => {
     setData((prev) => ({
@@ -109,6 +117,17 @@ export function OnboardingProvider({
         doc.id === id ? { ...doc, fileName: file.name, uploaded: false } : doc
       ),
     }))
+
+    // flujo standalone: sin token no se sube al backend, solo se guarda localmente
+    if (!invitationToken) {
+      setData((prev) => ({
+        ...prev,
+        documents: prev.documents.map((doc) =>
+          doc.id === id ? { ...doc, fileName: file.name, uploaded: true } : doc
+        ),
+      }))
+      return
+    }
 
     try {
       const result = await onboardingService.uploadDocument(invitationToken, id, file)
