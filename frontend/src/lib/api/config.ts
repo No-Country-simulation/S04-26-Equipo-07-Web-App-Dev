@@ -10,8 +10,8 @@ export const API = {
   },
   contractors: {
     list: '/contractors',
-    detail: (id: number) => `/contractors/${id}`,
-    status: (id: number) => `/contractors/${id}/status`,
+    detail: (id: string | number) => `/contractors/${id}`,
+    status: (id: string | number) => `/contractors/${id}/status`,
   },
   onboarding: {
     submit: '/onboarding',
