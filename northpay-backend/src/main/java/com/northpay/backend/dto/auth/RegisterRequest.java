@@ -9,6 +9,8 @@ import jakarta.validation.constraints.Past;
 import lombok.Data;
 
 import java.time.LocalDate;
+import java.util.HashMap;
+import java.util.Map;
 
 @Data
 public class RegisterRequest {
@@ -36,4 +38,23 @@ public class RegisterRequest {
 
     @Valid @NotNull
     private User.Address address;
+
+    // documentos subidos: clave = tipo (id/address/tax), valor = URL cloudinary
+    private Map<String, String> documentUrls = new HashMap<>();
+
+    // contrato firmado electronicamente
+    private String contractSignature;
+    private String contractSignedAt;
+
+    // metodo de cobro configurado durante el onboarding
+    private PaymentInfo paymentInfo;
+
+    @Data
+    public static class PaymentInfo {
+        private String bankName;
+        private String accountType;
+        private String accountNumber;
+        private String routingNumber;
+        private String currency;
+    }
 }

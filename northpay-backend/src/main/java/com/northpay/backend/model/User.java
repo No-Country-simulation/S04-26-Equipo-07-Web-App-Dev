@@ -47,6 +47,12 @@ public class User {
     // documentos subidos al onboarding: clave = tipo, valor = url cloudinary
     private Map<String, String> documents = new HashMap<>();
 
+    // metodo de cobro configurado durante el onboarding
+    private PaymentInfo paymentInfo;
+
+    // info del contrato firmado
+    private ContractInfo contractInfo;
+
     @CreatedDate
     private LocalDateTime createdAt;
 
@@ -64,5 +70,21 @@ public class User {
         private String country;
         private String city;
         private String street;
+    }
+
+    @Data
+    public static class PaymentInfo {
+        private String bankName;
+        private String accountType;
+        private String accountNumber;
+        private String routingNumber;
+        private String currency;
+    }
+
+    @Data
+    public static class ContractInfo {
+        private String signature;
+        private String signedAt;
+        private boolean accepted;
     }
 }

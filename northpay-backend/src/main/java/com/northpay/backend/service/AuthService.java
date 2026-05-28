@@ -73,11 +73,57 @@ public class AuthService {
         user.setAddress(req.getAddress());
         user.setStatus("pending");
 
+        // guarda urls de documentos subidos a cloudinary
+        if (req.getDocumentUrls() != null && !req.getDocumentUrls().isEmpty()) {
+            user.setDocuments(req.getDocumentUrls());
+        }
+
+        // guarda metodo de pago
+        if (req.getPaymentInfo() != null) {
+            User.PaymentInfo pi = new User.PaymentInfo();
+            pi.setBankName(req.getPaymentInfo().getBankName());
+            pi.setAccountType(req.getPaymentInfo().getAccountType());
+            pi.setAccountNumber(req.getPaymentInfo().getAccountNumber());
+            pi.setRoutingNumber(req.getPaymentInfo().getRoutingNumber());
+            pi.setCurrency(req.getPaymentInfo().getCurrency());
+            user.setPaymentInfo(pi);
+        }
+
+        // guarda informacion del contrato firmado
+        if (req.getContractSignature() != null) {
+            User.ContractInfo ci = new User.ContractInfo();
+            ci.setSignature(req.getContractSignature());
+            ci.setSignedAt(req.getContractSignedAt());
+            ci.setAccepted(true);
+            user.setContractInfo(ci);
+        }
+
         userRepository.save(user);
 
-        // crea la solicitud de onboarding pendiente de revision
+        // crea la solicitud de onboarding con toda la informacion para revision del trabajador
         OnboardingRequest onboarding = new OnboardingRequest();
         onboarding.setUserId(user.getId());
+
+        if (req.getDocumentUrls() != null) {
+            onboarding.setDocumentUrls(req.getDocumentUrls());
+        }
+
+        if (req.getPaymentInfo() != null) {
+            OnboardingRequest.PaymentSummary ps = new OnboardingRequest.PaymentSummary();
+            ps.setBankName(req.getPaymentInfo().getBankName());
+            ps.setAccountType(req.getPaymentInfo().getAccountType());
+            ps.setCurrency(req.getPaymentInfo().getCurrency());
+            onboarding.setPaymentSummary(ps);
+        }
+
+        if (req.getContractSignature() != null) {
+            OnboardingRequest.ContractSummary cs = new OnboardingRequest.ContractSummary();
+            cs.setSignature(req.getContractSignature());
+            cs.setSignedAt(req.getContractSignedAt());
+            cs.setAccepted(true);
+            onboarding.setContractSummary(cs);
+        }
+
         onboardingRequestRepository.save(onboarding);
 
         invitationService.useToken(req.getInvitationToken());
