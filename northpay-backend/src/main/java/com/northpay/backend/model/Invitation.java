@@ -15,13 +15,13 @@ public class Invitation {
     @Id
     private String id;
 
-    @Indexed(unique = true)
+    @Indexed
     private String email;
 
     @Indexed(unique = true)
     private String token;
 
-    // pending | used | expired
+    // pending | used | expired | cancelled | completed | resend | approved
     private String status = "pending";
 
     private String invitedBy;
