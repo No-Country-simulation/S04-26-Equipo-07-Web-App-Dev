@@ -6,7 +6,7 @@ export const personalInfoSchema = z.object({
     .regex(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/, "El nombre no debe contener caracteres especiales"),
   email: z.string().email("Ingresa un correo electrónico válido"),
   phone: z.string()
-    .min(10, "El teléfono debe tener al menos 10 dígitos")
+    .min(9, "El teléfono debe tener al menos 9 dígitos")
     .regex(/^\d+$/, "El teléfono solo debe contener números"),
   phoneCode: z.string().min(1, "Selecciona un código de país"),
   dateOfBirth: z.string()
