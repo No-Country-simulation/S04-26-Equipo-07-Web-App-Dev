@@ -14,4 +14,7 @@ export const requestService = {
 
   updateStatus: (id: string, data: object) =>
     workerAxios.put(`/worker/requests/${id}/status`, data),
+
+  deleteRejected: (id: string) =>
+    workerAxios.delete(`/worker/requests/${id}`),
 }
