@@ -54,19 +54,26 @@ function DetailPanel({ req, onClose }: { req: Request; onClose: () => void }) {
   const qc = useQueryClient()
   const [reviewingDoc, setReviewingDoc] = useState<string | null>(null)
   const [infoPage, setInfoPage] = useState(0)
+  const [docReviews, setDocReviews] = useState(req.documentReviews)
   const PER_PAGE = 3
+
+  const updateDocStatus = (key: string, status: string) => {
+    setDocReviews(prev => prev.map(d => d.documentKey === key ? { ...d, status } : d))
+    setReviewingDoc(null)
+  }
+
   const approveDoc = useMutation({
     mutationFn: (key: string) => requestService.reviewDocument(req.id, key, { status: 'APPROVED' }),
-    onSuccess: () => {
+    onSuccess: (_data, key) => {
       qc.invalidateQueries({ queryKey: ['requests'] })
-      setReviewingDoc(null)
+      updateDocStatus(key, 'APPROVED')
     },
   })
   const rejectDoc = useMutation({
     mutationFn: (key: string) => requestService.reviewDocument(req.id, key, { status: 'REJECTED' }),
-    onSuccess: () => {
+    onSuccess: (_data, key) => {
       qc.invalidateQueries({ queryKey: ['requests'] })
-      setReviewingDoc(null)
+      updateDocStatus(key, 'REJECTED')
     },
   })
   const approve = useMutation({
@@ -84,15 +91,15 @@ function DetailPanel({ req, onClose }: { req: Request; onClose: () => void }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm" onClick={onClose}>
-      <div className="w-full max-w-2xl border border-[#3c4b35] bg-[#0c1609] shadow-2xl" onClick={e => e.stopPropagation()}>
-        <div className="flex items-center justify-between border-b border-[#3c4b35] px-6 py-4">
+      <div className="w-full max-w-2xl max-h-[90vh] flex flex-col border border-[#3c4b35] bg-[#0c1609] shadow-2xl" onClick={e => e.stopPropagation()}>
+        <div className="shrink-0 flex items-center justify-between border-b border-[#3c4b35] px-6 py-4">
           <h2 className="font-mono text-[13px] uppercase tracking-wider text-[#f0ffe4]">
             Solicitud_<span className="text-[#42ff00]">#{req.id.slice(-8).toUpperCase()}</span>
           </h2>
           <button onClick={onClose} className="text-[#baccaf] hover:text-[#f0ffe4]"><X size={18} /></button>
         </div>
 
-        <div className="p-6 space-y-6">
+        <div className="flex-1 overflow-y-auto p-6 space-y-6">
           <div className="grid grid-cols-2 gap-4 border border-[#3c4b35] bg-[#141e10] p-4">
             <div>
               <p className="font-mono text-label-mono-bold uppercase tracking-widest text-[#3c4b35]">Estado</p>
@@ -112,25 +119,21 @@ function DetailPanel({ req, onClose }: { req: Request; onClose: () => void }) {
             </div>
           </div>
 
-          {req.documentReviews.length > 0 && (
+          {docReviews.length > 0 && (
             <div>
               <p className="mb-2 font-mono text-[10px] uppercase tracking-wider text-[#baccaf]">Documentos</p>
               <div className="space-y-1">
-                {req.documentReviews.map(d => (
+                {docReviews.map(d => (
                   <div key={d.documentKey} className="flex items-center justify-between border border-[#3c4b35] px-4 py-2">
                     <div className="flex items-center gap-2">
                       <span className="font-mono text-[11px] text-[#dae6d0]">{d.name || d.documentKey}</span>
                       {d.url && (
                         <a href={d.url} target="_blank" rel="noopener noreferrer"
-                           onClick={() => {
-                             if (d.status === 'PENDING') {
-                               setReviewingDoc(reviewingDoc === d.documentKey ? null : d.documentKey)
-                             }
-                           }}
                            className="font-mono text-[10px] text-[#8ab47a] hover:text-[#a0d090] underline">
                           Ver
                         </a>
                       )}
+
                     </div>
                     {reviewingDoc === d.documentKey && d.status === 'PENDING' ? (
                       <div className="flex items-center gap-2">
@@ -208,7 +211,7 @@ function DetailPanel({ req, onClose }: { req: Request; onClose: () => void }) {
           )}
         </div>
 
-        <div className="flex justify-end gap-3 border-t border-[#3c4b35] px-6 py-4">
+        <div className="shrink-0 flex justify-end gap-3 border-t border-[#3c4b35] px-6 py-4">
           <button onClick={onClose} className="border border-[#3c4b35] px-4 py-2 font-mono text-[10px] uppercase tracking-wider text-[#baccaf] hover:border-[#42ff00] hover:text-[#42ff00]">
             Cerrar
           </button>
