@@ -1,5 +1,4 @@
-import { createContext, useContext, useState, useCallback } from 'react'
-import type { ReactNode } from 'react'
+import { createContext, useContext, useState, useCallback,  } from 'react'
 import { workerAuthService } from '@/lib/services/worker/auth.service'
 
 interface WorkerAuthContextType {
@@ -12,7 +11,7 @@ interface WorkerAuthContextType {
 
 const WorkerAuthContext = createContext<WorkerAuthContextType | null>(null)
 
-export function WorkerAuthProvider({ children }: { children: ReactNode }) {
+export function WorkerAuthProvider({ children }: { children: React.ReactNode }) {
   const [token, setToken] = useState<string | null>(() => localStorage.getItem('worker_token'))
   const [workerId, setWorkerId] = useState<string | null>(() => localStorage.getItem('worker_id'))
 

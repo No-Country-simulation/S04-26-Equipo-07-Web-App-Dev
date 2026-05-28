@@ -54,12 +54,12 @@ export default function WorkerLayout() {
         <div className="border-b border-[#3c4b35] p-6">
           <div className="flex items-center gap-2">
             <span className="h-2 w-2 rounded-full bg-[#42ff00]" />
-            <h2 className="font-mono text-[16px] font-bold tracking-widest text-[#f0ffe4]">
+            <h2 className="font-mono text-body font-bold tracking-widest text-[#f0ffe4]">
               NORTH<span className="text-[#42ff00]">PAY</span>
             </h2>
           </div>
           <p className="mt-1 font-mono text-[10px] uppercase tracking-wider text-[#3c4b35]">
-            Panel_Trabajador_v1.0
+            Panel Trabajador v1.0
           </p>
         </div>
 
@@ -67,7 +67,7 @@ export default function WorkerLayout() {
         <nav className="flex-1 overflow-y-auto p-3 space-y-4">
           {gestion.length > 0 && (
             <div>
-              <p className="mb-1 px-3 font-mono text-[9px] uppercase tracking-widest text-[#3c4b35]">
+              <p className="mb-1 px-3 font-mono text-label-mono-bold uppercase tracking-widest text-[#3c4b35]">
                 — Gestión
               </p>
               <div className="space-y-0.5">
@@ -77,7 +77,7 @@ export default function WorkerLayout() {
           )}
           {sistema.length > 0 && (
             <div>
-              <p className="mb-1 px-3 font-mono text-[9px] uppercase tracking-widest text-[#3c4b35]">
+              <p className="mb-1 px-3 font-mono text-label-mono-bold uppercase tracking-widest text-[#3c4b35]">
                 — Sistema
               </p>
               <div className="space-y-0.5">

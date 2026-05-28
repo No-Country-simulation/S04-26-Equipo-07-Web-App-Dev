@@ -16,7 +16,6 @@ export type OnboardingDocument = {
   name: string
   fileName: string | null
   uploaded: boolean
-  // URL cloudinary una vez subido al backend
   url?: string
 }
 

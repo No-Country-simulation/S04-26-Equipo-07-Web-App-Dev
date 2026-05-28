@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button"
 import React from "react"
 import { useNavigate } from "react-router-dom"
 import { useUserAuth } from "@/contexts/UserAuthContext"
+import { Eye, EyeOff } from "lucide-react"
 
 export const LoginPage = () => {
   const navigate = useNavigate()
@@ -11,6 +12,7 @@ export const LoginPage = () => {
   const [password, setPassword] = React.useState("")
   const [error, setError] = React.useState("")
   const [loading, setLoading] = React.useState(false)
+  const [showPassword, setShowPassword] = React.useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -19,8 +21,9 @@ export const LoginPage = () => {
     try {
       await login(email, password)
       navigate("/dashboard")
-    } catch {
-      setError("Credenciales invalidas. Intenta nuevamente.")
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error
+      setError(msg ?? "Credenciales invalidas. Intenta nuevamente.")
     }
     setLoading(false)
   }
@@ -58,6 +61,7 @@ export const LoginPage = () => {
           </div>
 
           <div>
+
             <label
               htmlFor="password"
               className="mb-2 block font-mono text-[10px] uppercase tracking-wider text-[#baccaf]"
@@ -67,11 +71,12 @@ export const LoginPage = () => {
 
             <Input
               id="password"
-              type="password"
+              type={showPassword ? "text" : "password"}
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="border-[#3c4b35] bg-[#232d1e] font-mono text-[#dae6d0] placeholder:text-[#3c4b35] focus-visible:ring-0 focus-visible:border-[#42ff00]"
+              icon={showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              onIconClick={() => setShowPassword(!showPassword)}
             />
           </div>
           {error && (

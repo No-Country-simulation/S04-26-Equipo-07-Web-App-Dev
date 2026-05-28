@@ -5,7 +5,7 @@ import { convocatoriaService } from '@/lib/services/user/convocatoria.service'
 import { companyService } from '@/lib/services/user/company.service'
 import { useUserAuth } from '@/contexts/UserAuthContext'
 import { Plus, X, Eye, ChevronRight, ChevronLeft, Users } from 'lucide-react'
-import ReactQuill from 'react-quill-new'
+import ReactQuill from 'react-quill'
 import 'react-quill-new/dist/quill.snow.css';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -51,7 +51,7 @@ function StepBar({ step }: { step: number }) {
             ${i + 1 <= step ? 'bg-[#42ff00] text-[#083900]' : 'border border-[#3c4b35] text-[#3c4b35]'}`}>
             {i + 1}
           </div>
-          <span className={`font-mono text-[9px] uppercase tracking-wider
+          <span className={`font-mono text-label-mono-bold uppercase tracking-wider
             ${i + 1 <= step ? 'text-[#42ff00]' : 'text-[#3c4b35]'}`}>
             {label}
           </span>
@@ -201,7 +201,7 @@ function DraftWizard({
                 <select
                   value={form.companyId}
                   onChange={e => set('companyId', e.target.value)}
-                  className="w-full border border-[#3c4b35] bg-[#182214] px-3 py-2 font-mono text-[12px] text-[#dae6d0] outline-none focus:border-[#42ff00]"
+                  className="w-full border border-[#3c4b35] bg-[#182214] px-3 py-2 font-mono text-caption-mono text-[#dae6d0] outline-none focus:border-[#42ff00]"
                 >
                   <option value="">Selecciona una empresa</option>
                   {companies.map(c => (
@@ -215,7 +215,7 @@ function DraftWizard({
                   value={form.title}
                   onChange={e => set('title', e.target.value)}
                   placeholder="Ej: Desarrollador Full Stack Senior"
-                  className="w-full border border-[#3c4b35] bg-[#182214] px-3 py-2 font-mono text-[12px] text-[#dae6d0] placeholder:text-[#3c4b35] outline-none focus:border-[#42ff00]"
+                  className="w-full border border-[#3c4b35] bg-[#182214] px-3 py-2 font-mono text-caption-mono text-[#dae6d0] placeholder:text-[#3c4b35] outline-none focus:border-[#42ff00]"
                 />
               </div>
               <div>
@@ -224,7 +224,7 @@ function DraftWizard({
                   <ReactQuill
                     theme="snow"
                     value={form.description}
-                    onChange={v => set('description', v)}
+                    onChange={(v: unknown) => set('description', v)}
                     style={{ minHeight: '120px' }}
                   />
                 </div>
@@ -235,7 +235,7 @@ function DraftWizard({
                   value={form.location}
                   onChange={e => set('location', e.target.value)}
                   placeholder="Ej: Buenos Aires, Argentina"
-                  className="w-full border border-[#3c4b35] bg-[#182214] px-3 py-2 font-mono text-[12px] text-[#dae6d0] placeholder:text-[#3c4b35] outline-none focus:border-[#42ff00]"
+                  className="w-full border border-[#3c4b35] bg-[#182214] px-3 py-2 font-mono text-caption-mono text-[#dae6d0] placeholder:text-[#3c4b35] outline-none focus:border-[#42ff00]"
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -246,7 +246,7 @@ function DraftWizard({
                     value={form.salaryMin}
                     onChange={e => set('salaryMin', e.target.value)}
                     placeholder="Opcional"
-                    className="w-full border border-[#3c4b35] bg-[#182214] px-3 py-2 font-mono text-[12px] text-[#dae6d0] placeholder:text-[#3c4b35] outline-none focus:border-[#42ff00]"
+                    className="w-full border border-[#3c4b35] bg-[#182214] px-3 py-2 font-mono text-caption-mono text-[#dae6d0] placeholder:text-[#3c4b35] outline-none focus:border-[#42ff00]"
                   />
                 </div>
                 <div>
@@ -256,7 +256,7 @@ function DraftWizard({
                     value={form.salaryMax}
                     onChange={e => set('salaryMax', e.target.value)}
                     placeholder="Opcional"
-                    className="w-full border border-[#3c4b35] bg-[#182214] px-3 py-2 font-mono text-[12px] text-[#dae6d0] placeholder:text-[#3c4b35] outline-none focus:border-[#42ff00]"
+                    className="w-full border border-[#3c4b35] bg-[#182214] px-3 py-2 font-mono text-caption-mono text-[#dae6d0] placeholder:text-[#3c4b35] outline-none focus:border-[#42ff00]"
                   />
                 </div>
               </div>
@@ -267,7 +267,7 @@ function DraftWizard({
                     type="date"
                     value={form.startDate}
                     onChange={e => set('startDate', e.target.value)}
-                    className="w-full border border-[#3c4b35] bg-[#182214] px-3 py-2 font-mono text-[12px] text-[#dae6d0] outline-none focus:border-[#42ff00]"
+                    className="w-full border border-[#3c4b35] bg-[#182214] px-3 py-2 font-mono text-caption-mono text-[#dae6d0] outline-none focus:border-[#42ff00]"
                   />
                 </div>
                 <div>
@@ -277,7 +277,7 @@ function DraftWizard({
                     value={form.endDate}
                     min={form.startDate}
                     onChange={e => set('endDate', e.target.value)}
-                    className="w-full border border-[#3c4b35] bg-[#182214] px-3 py-2 font-mono text-[12px] text-[#dae6d0] outline-none focus:border-[#42ff00]"
+                    className="w-full border border-[#3c4b35] bg-[#182214] px-3 py-2 font-mono text-caption-mono text-[#dae6d0] outline-none focus:border-[#42ff00]"
                   />
                 </div>
               </div>
@@ -343,7 +343,7 @@ function DraftWizard({
                   onChange={e => setTechInput(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addTech(techInput) } }}
                   placeholder="Escribe o selecciona una tecnología..."
-                  className="flex-1 border border-[#3c4b35] bg-[#182214] px-3 py-2 font-mono text-[12px] text-[#dae6d0] placeholder:text-[#3c4b35] outline-none focus:border-[#42ff00]"
+                  className="flex-1 border border-[#3c4b35] bg-[#182214] px-3 py-2 font-mono text-caption-mono text-[#dae6d0] placeholder:text-[#3c4b35] outline-none focus:border-[#42ff00]"
                 />
                 <button
                   type="button"
@@ -359,7 +359,7 @@ function DraftWizard({
                     key={t}
                     type="button"
                     onClick={() => addTech(t)}
-                    className="border border-[#3c4b35] px-2 py-1 font-mono text-[9px] text-[#3c4b35] hover:border-[#42ff00] hover:text-[#42ff00] transition-colors"
+                    className="border border-[#3c4b35] px-2 py-1 font-mono text-label-mono-bold text-[#3c4b35] hover:border-[#42ff00] hover:text-[#42ff00] transition-colors"
                   >
                     + {t}
                   </button>
@@ -367,7 +367,7 @@ function DraftWizard({
               </div>
               {form.technicalRequirements.length > 0 && (
                 <div>
-                  <p className="mb-2 font-mono text-[9px] uppercase tracking-wider text-[#3c4b35]">Seleccionados:</p>
+                  <p className="mb-2 font-mono text-label-mono-bold uppercase tracking-wider text-[#3c4b35]">Seleccionados:</p>
                   <div className="flex flex-wrap gap-2">
                     {form.technicalRequirements.map(t => (
                       <span
@@ -398,7 +398,7 @@ function DraftWizard({
                   onChange={e => setQuestionInput(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addQuestion() } }}
                   placeholder="Ej: ¿Cuántos años de experiencia tienes?"
-                  className="flex-1 border border-[#3c4b35] bg-[#182214] px-3 py-2 font-mono text-[12px] text-[#dae6d0] placeholder:text-[#3c4b35] outline-none focus:border-[#42ff00]"
+                  className="flex-1 border border-[#3c4b35] bg-[#182214] px-3 py-2 font-mono text-caption-mono text-[#dae6d0] placeholder:text-[#3c4b35] outline-none focus:border-[#42ff00]"
                 />
                 <button
                   type="button"
@@ -413,7 +413,7 @@ function DraftWizard({
                   {form.questions.map((q, i) => (
                     <div key={i} className="flex items-start gap-2 border border-[#3c4b35] bg-[#182214] p-3">
                       <span className="mt-0.5 font-mono text-[10px] text-[#3c4b35]">{i + 1}.</span>
-                      <p className="flex-1 font-mono text-[12px] text-[#dae6d0]">{q}</p>
+                      <p className="flex-1 font-mono text-caption-mono text-[#dae6d0]">{q}</p>
                       <button type="button" onClick={() => removeQuestion(i)} className="text-[#3c4b35] hover:text-[#ffb4ab]">
                         <X size={12} />
                       </button>
@@ -509,7 +509,7 @@ function FinalizeModal({
   return (
     <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/70 p-4">
       <div className="w-full max-w-md border border-[#3c4b35] bg-[#0c1609] p-6">
-        <h3 className="mb-2 font-mono text-[14px] font-bold text-[#f0ffe4]">
+        <h3 className="mb-2 font-mono text-body-sm font-bold text-[#f0ffe4]">
           ¿Finalizar convocatoria?
         </h3>
         <p className="mb-4 font-mono text-[11px] text-[#baccaf]">
@@ -567,14 +567,14 @@ function ActivePanel({ conv, onFinalize }: { conv: Convocatoria; onFinalize: () 
         <div className="border border-[#3c4b35] bg-[#182214] p-4 flex items-center gap-4">
           <Eye size={20} className="text-[#42ff00]" />
           <div>
-            <p className="font-mono text-[9px] uppercase tracking-wider text-[#3c4b35]">Vistas</p>
+            <p className="font-mono text-label-mono-bold uppercase tracking-wider text-[#3c4b35]">Vistas</p>
             <p className="font-mono text-[24px] font-bold text-[#f0ffe4]">{conv.views}</p>
           </div>
         </div>
         <div className="border border-[#3c4b35] bg-[#182214] p-4 flex items-center gap-4">
           <Users size={20} className="text-[#42ff00]" />
           <div>
-            <p className="font-mono text-[9px] uppercase tracking-wider text-[#3c4b35]">Postulantes</p>
+            <p className="font-mono text-label-mono-bold uppercase tracking-wider text-[#3c4b35]">Postulantes</p>
             <p className="font-mono text-[24px] font-bold text-[#f0ffe4]">{conv.applicationCount}</p>
           </div>
         </div>
@@ -597,7 +597,7 @@ function ActivePanel({ conv, onFinalize }: { conv: Convocatoria; onFinalize: () 
       </div>
 
       <div>
-        <p className="mb-3 font-mono text-[9px] uppercase tracking-widest text-[#3c4b35]">— Postulantes</p>
+        <p className="mb-3 font-mono text-label-mono-bold uppercase tracking-widest text-[#3c4b35]">— Postulantes</p>
         {apps.length === 0 ? (
           <p className="font-mono text-[11px] text-[#3c4b35]">Aún no hay postulantes.</p>
         ) : (
@@ -605,7 +605,7 @@ function ActivePanel({ conv, onFinalize }: { conv: Convocatoria; onFinalize: () 
             {apps.map(a => (
               <div key={a.id} className="flex items-center justify-between px-4 py-3 hover:bg-[#42ff00]/5">
                 <div>
-                  <p className="font-mono text-[12px] font-bold text-[#dae6d0]">{a.applicantName}</p>
+                  <p className="font-mono text-caption-mono font-bold text-[#dae6d0]">{a.applicantName}</p>
                   <p className="font-mono text-[10px] text-[#baccaf]">{a.applicantEmail}</p>
                 </div>
                 <p className="font-mono text-[10px] text-[#3c4b35]">
@@ -638,7 +638,7 @@ function DetailDrawer({ conv, companies, onClose }: { conv: Convocatoria; compan
         >
           <div className="mb-6 flex items-start justify-between">
             <div>
-              <span className={`inline-block border px-2 py-0.5 font-mono text-[9px] uppercase tracking-wider ${statusBorder(conv.status)}`}>
+              <span className={`inline-block border px-2 py-0.5 font-mono text-label-mono-bold uppercase tracking-wider ${statusBorder(conv.status)}`}>
                 {conv.status}
               </span>
               <h3 className="mt-2 font-mono text-[18px] font-bold text-[#f0ffe4]">{conv.title}</h3>
@@ -674,26 +674,26 @@ function DetailDrawer({ conv, companies, onClose }: { conv: Convocatoria; compan
           <div className="mt-6 space-y-4">
             {conv.location && (
               <div>
-                <p className="font-mono text-[9px] uppercase tracking-wider text-[#3c4b35]">Ubicación</p>
-                <p className="font-mono text-[12px] text-[#dae6d0]">{conv.location}</p>
+                <p className="font-mono text-label-mono-bold uppercase tracking-wider text-[#3c4b35]">Ubicación</p>
+                <p className="font-mono text-caption-mono text-[#dae6d0]">{conv.location}</p>
               </div>
             )}
             {conv.modality && (
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="font-mono text-[9px] uppercase tracking-wider text-[#3c4b35]">Modalidad</p>
-                  <p className="font-mono text-[12px] text-[#dae6d0]">{conv.modality}</p>
+                  <p className="font-mono text-label-mono-bold uppercase tracking-wider text-[#3c4b35]">Modalidad</p>
+                  <p className="font-mono text-caption-mono text-[#dae6d0]">{conv.modality}</p>
                 </div>
                 <div>
-                  <p className="font-mono text-[9px] uppercase tracking-wider text-[#3c4b35]">Contrato</p>
-                  <p className="font-mono text-[12px] text-[#dae6d0]">{conv.contractType}</p>
+                  <p className="font-mono text-label-mono-bold uppercase tracking-wider text-[#3c4b35]">Contrato</p>
+                  <p className="font-mono text-caption-mono text-[#dae6d0]">{conv.contractType}</p>
                 </div>
               </div>
             )}
             {(conv.salaryMin || conv.salaryMax) && (
               <div>
-                <p className="font-mono text-[9px] uppercase tracking-wider text-[#3c4b35]">Rango Salarial</p>
-                <p className="font-mono text-[12px] text-[#42ff00]">
+                <p className="font-mono text-label-mono-bold uppercase tracking-wider text-[#3c4b35]">Rango Salarial</p>
+                <p className="font-mono text-caption-mono text-[#42ff00]">
                   ${conv.salaryMin?.toLocaleString()} – ${conv.salaryMax?.toLocaleString()} USD
                 </p>
               </div>
@@ -701,20 +701,20 @@ function DetailDrawer({ conv, companies, onClose }: { conv: Convocatoria; compan
             {conv.startDate && (
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="font-mono text-[9px] uppercase tracking-wider text-[#3c4b35]">Fecha Inicio</p>
-                  <p className="font-mono text-[12px] text-[#dae6d0]">{conv.startDate.slice(0, 10)}</p>
+                  <p className="font-mono text-label-mono-bold uppercase tracking-wider text-[#3c4b35]">Fecha Inicio</p>
+                  <p className="font-mono text-caption-mono text-[#dae6d0]">{conv.startDate.slice(0, 10)}</p>
                 </div>
                 {conv.endDate && (
                   <div>
-                    <p className="font-mono text-[9px] uppercase tracking-wider text-[#3c4b35]">Fecha Fin</p>
-                    <p className="font-mono text-[12px] text-[#dae6d0]">{conv.endDate.slice(0, 10)}</p>
+                    <p className="font-mono text-label-mono-bold uppercase tracking-wider text-[#3c4b35]">Fecha Fin</p>
+                    <p className="font-mono text-caption-mono text-[#dae6d0]">{conv.endDate.slice(0, 10)}</p>
                   </div>
                 )}
               </div>
             )}
             {conv.technicalRequirements?.length > 0 && (
               <div>
-                <p className="mb-2 font-mono text-[9px] uppercase tracking-wider text-[#3c4b35]">Requisitos Técnicos</p>
+                <p className="mb-2 font-mono text-label-mono-bold uppercase tracking-wider text-[#3c4b35]">Requisitos Técnicos</p>
                 <div className="flex flex-wrap gap-2">
                   {conv.technicalRequirements.map(t => (
                     <span key={t} className="border border-[#42ff00]/30 px-2 py-0.5 font-mono text-[10px] text-[#42ff00]">{t}</span>
@@ -724,8 +724,8 @@ function DetailDrawer({ conv, companies, onClose }: { conv: Convocatoria; compan
             )}
             {conv.creditCost > 0 && (
               <div>
-                <p className="font-mono text-[9px] uppercase tracking-wider text-[#3c4b35]">Costo en Créditos</p>
-                <p className="font-mono text-[12px] text-[#42ff00]">${conv.creditCost} USD</p>
+                <p className="font-mono text-label-mono-bold uppercase tracking-wider text-[#3c4b35]">Costo en Créditos</p>
+                <p className="font-mono text-caption-mono text-[#42ff00]">${conv.creditCost} USD</p>
               </div>
             )}
           </div>
@@ -815,7 +815,7 @@ export default function ConvocatoriasPage() {
                 <tr>
                   <td colSpan={6} className="px-5 py-10 text-center">
                     <p className="font-mono text-[10px] text-[#baccaf]">Sin convocatorias publicadas</p>
-                    <p className="mt-1 font-mono text-[9px] text-[#3c4b35]">Usa el botón "Nueva Convocatoria" para publicar una.</p>
+                    <p className="mt-1 font-mono text-label-mono-bold text-[#3c4b35]">Usa el botón "Nueva Convocatoria" para publicar una.</p>
                   </td>
                 </tr>
               ) : convocatorias.map(c => {
@@ -823,7 +823,7 @@ export default function ConvocatoriasPage() {
                 return (
                   <tr key={c.id} className="transition-colors hover:bg-[#42ff00]/5">
                     <td className="px-5 py-4">
-                      <p className="font-mono text-[12px] font-bold text-[#dae6d0]">{c.title}</p>
+                      <p className="font-mono text-caption-mono font-bold text-[#dae6d0]">{c.title}</p>
                     </td>
                     <td className="px-5 py-4 font-mono text-[11px] text-[#baccaf]">
                       {company?.name ?? c.companyId.slice(-8)}

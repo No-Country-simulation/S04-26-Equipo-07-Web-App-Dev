@@ -101,6 +101,14 @@ export default function DocumentsStep() {
                   <X size={14} />
                   <span className="font-caption-mono text-caption-mono uppercase tracking-widest">Eliminar</span>
                 </button>
+              ) : uploading[doc.id] ? (
+                <button
+                  disabled
+                  className="flex items-center gap-2 px-4 py-2 text-sm bg-primary-container/10 text-primary-container/50 border border-primary-container/20 cursor-not-allowed"
+                >
+                  <Loader2 size={14} className="animate-spin" />
+                  <span className="font-caption-mono text-caption-mono uppercase tracking-widest">Subiendo...</span>
+                </button>
               ) : (
                 <button
                   onClick={() => fileInputRef.current[doc.id]?.click()}

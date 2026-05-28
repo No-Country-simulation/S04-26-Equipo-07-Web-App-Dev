@@ -1,6 +1,9 @@
-import { createContext, useContext, useState, type ReactNode } from "react"
+import { createContext, useContext, useState, useMemo, useEffect, type ReactNode } from "react"
 import type { OnboardingData, PersonalInfo, PaymentInfo, OnboardingDocument } from "@/types/onboarding"
 import { onboardingService } from "@/lib/services/user/onboarding.service"
+
+// Se mantiene la información de manera persistente durante el proceso de onboarding, incluso si el usuario recarga la página.
+const STORAGE_KEY = 'onboarding_state'
 
 const defaultDocuments: OnboardingDocument[] = [
   { id: "id", name: "Identificación Oficial", fileName: null, uploaded: false },
@@ -8,7 +11,7 @@ const defaultDocuments: OnboardingDocument[] = [
   { id: "tax", name: "Cédula Fiscal / RFC", fileName: null, uploaded: false },
 ]
 
-const initialData: OnboardingData = {
+const defaultInitialData: OnboardingData = {
   personalInfo: {
     fullName: "", email: "", phone: "", phoneCode: "+52", dateOfBirth: "",
     address: "", city: "", state: "", zipCode: "", country: "México",
@@ -18,6 +21,14 @@ const initialData: OnboardingData = {
   payment: {
     bankName: "", accountType: "checking", accountNumber: "", routingNumber: "", currency: "MXN",
   },
+}
+
+function mergeInitialData(prefilled?: Partial<OnboardingData>): OnboardingData {
+  if (!prefilled) return defaultInitialData
+  return {
+    ...defaultInitialData,
+    personalInfo: { ...defaultInitialData.personalInfo, ...prefilled.personalInfo },
+  }
 }
 
 type OnboardingContextType = {
@@ -43,20 +54,43 @@ const OnboardingContext = createContext<OnboardingContextType | null>(null)
 
 export function OnboardingProvider({
   children,
+  prefilledData,
   initialToken = "",
-  initialEmail = "",
 }: {
   children: ReactNode
+  prefilledData?: Partial<OnboardingData>
   initialToken?: string
-  initialEmail?: string
 }) {
-  const [currentStep, setCurrentStep] = useState(0)
+  const computedInitialData = useMemo(() => mergeInitialData(prefilledData), [])
+
+  const [currentStep, setCurrentStep] = useState<number>(() => {
+    try {
+      const saved = sessionStorage.getItem(STORAGE_KEY)
+      return saved ? JSON.parse(saved).currentStep ?? 0 : 0
+    } catch {
+      return 0
+    }
+  })
+
   const [invitationToken, setInvitationToken] = useState(initialToken)
   const [uploadError, setUploadError] = useState<string | null>(null)
-  const [data, setData] = useState<OnboardingData>(() => ({
-    ...initialData,
-    personalInfo: { ...initialData.personalInfo, email: initialEmail },
-  }))
+
+  const [data, setData] = useState<OnboardingData>(() => {
+    try {
+      const saved = sessionStorage.getItem(STORAGE_KEY)
+      return saved ? JSON.parse(saved).data ?? computedInitialData : computedInitialData
+    } catch {
+      return computedInitialData
+    }
+  })
+
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ currentStep, data }))
+    } catch {
+      // sessionStorage puede fallar en modo privado o si está lleno
+    }
+  }, [currentStep, data])
 
   const updatePersonalInfo = (info: Partial<PersonalInfo>) => {
     setData((prev) => ({
@@ -127,9 +161,14 @@ export function OnboardingProvider({
 
   const resetOnboarding = () => {
     setCurrentStep(0)
-    setData({ ...initialData, personalInfo: { ...initialData.personalInfo, email: "" } })
+    setData(computedInitialData)
     setInvitationToken("")
     setUploadError(null)
+    try {
+      sessionStorage.removeItem(STORAGE_KEY)
+    } catch {
+      // ignore
+    }
   }
 
   return (

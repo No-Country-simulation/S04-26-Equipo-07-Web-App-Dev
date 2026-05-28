@@ -1,16 +1,20 @@
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useNavigate } from "react-router-dom"
+import { useState } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import registerSchema from "../stores/registerSchema"
 import { register as apiRegister } from "@/lib/api/auth"
+import { Eye, EyeOff } from "lucide-react"
 import type { z } from "zod"
 
 type RegisterFormData = z.infer<typeof registerSchema>
 
 export const RegisterPage = () => {
   const navigate = useNavigate()
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const {
     register,
     handleSubmit,
@@ -57,7 +61,14 @@ export const RegisterPage = () => {
             <label htmlFor="password" className="mb-2 block text-sm font-medium">
               Contraseña
             </label>
-            <Input id="password" type="password" placeholder="••••••••" {...register("password")} />
+            <Input
+              id="password"
+              type={showPassword ? "text" : "password"}
+              placeholder="••••••••"
+              icon={showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              onIconClick={() => setShowPassword(!showPassword)}
+              {...register("password")}
+            />
             {errors.password && (
               <p className="text-sm text-red-500">{errors.password.message}</p>
             )}
@@ -67,7 +78,14 @@ export const RegisterPage = () => {
             <label htmlFor="confirmPassword" className="mb-2 block text-sm font-medium">
               Confirmar Contraseña
             </label>
-            <Input id="confirmPassword" type="password" placeholder="••••••••" {...register("confirmPassword")} />
+            <Input
+              id="confirmPassword"
+              type={showConfirmPassword ? "text" : "password"}
+              placeholder="••••••••"
+              icon={showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              onIconClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              {...register("confirmPassword")}
+            />
             {errors.confirmPassword && (
               <p className="text-sm text-red-500">{errors.confirmPassword.message}</p>
             )}

@@ -6,6 +6,7 @@ import { z } from 'zod'
 import { authService } from '@/lib/services/user/auth.service'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { CheckCircle } from 'lucide-react'
 
 const schema = z.object({
   password: z
@@ -27,6 +28,7 @@ export default function SetPassword() {
   const navigate = useNavigate()
   const token = params.get('token') ?? ''
   const [error, setError] = useState('')
+  const [success, setSuccess] = useState(false)
 
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -35,10 +37,30 @@ export default function SetPassword() {
   const onSubmit = async (values: FormValues) => {
     try {
       await authService.setPassword({ token, ...values })
-      navigate('/login?activated=1')
+      setSuccess(true)
     } catch {
       setError('token invalido o expirado')
     }
+  }
+
+  if (success) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+        <div className="w-full max-w-sm border border-[#3c4b35] bg-[#0c1609] p-8 shadow-2xl text-center space-y-6">
+          <CheckCircle size={48} className="mx-auto text-[#42ff00]" />
+          <div>
+            <h2 className="text-xl font-bold text-[#f0ffe4]">Contrasena cambiada</h2>
+            <p className="text-sm text-[#baccaf] mt-1">Tu contrasena se ha configurado exitosamente.</p>
+          </div>
+          <Button
+            onClick={() => navigate('/login')}
+            className="w-full bg-[#42ff00] text-[#083900] font-bold hover:brightness-110"
+          >
+            Ir a login
+          </Button>
+        </div>
+      </div>
+    )
   }
 
   return (

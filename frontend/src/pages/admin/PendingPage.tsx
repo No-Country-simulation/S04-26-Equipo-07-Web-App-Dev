@@ -24,11 +24,11 @@ export default function PendingPage() {
   const pending = data.filter((c) => c.status === "pending")
 
   const approve = useMutation({
-    mutationFn: (id: number) => updateContractorStatus(id, "approved"),
+    mutationFn: (id: string | number) => updateContractorStatus(String(id), "approved"),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["contractors"] }),
   })
   const reject = useMutation({
-    mutationFn: (id: number) => updateContractorStatus(id, "rejected"),
+    mutationFn: (id: string | number) => updateContractorStatus(String(id), "rejected"),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["contractors"] }),
   })
 

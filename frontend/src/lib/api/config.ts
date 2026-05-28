@@ -1,4 +1,4 @@
-export const USE_MOCK = true
+export const USE_MOCK = false
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api'
 
@@ -10,12 +10,16 @@ export const API = {
   },
   contractors: {
     list: '/contractors',
-    detail: (id: number) => `/contractors/${id}`,
-    status: (id: number) => `/contractors/${id}/status`,
+    detail: (id: string | number) => `/contractors/${id}`,
+    status: (id: string | number) => `/contractors/${id}/status`,
   },
   onboarding: {
     submit: '/onboarding',
     upload: '/onboarding/upload',
+  },
+  invitations: {
+    validate: (token: string) => `/auth/invitation/validate?token=${token}`,
+    create: '/worker/invitations',
   },
   users: '/users',
 }

@@ -4,7 +4,9 @@ import { useState, useEffect, useRef } from "react"
 import {
   Search, Filter, TrendingUp, Timer, ShieldCheck, RefreshCw,
   Download, ChevronLeft, ChevronRight, CheckCircle, Clock, Eye,
+  Link, Copy, X, Loader2,
 } from "lucide-react"
+import { createInvitation } from "@/lib/api/invitations"
 
 const steps: Record<string, string> = {
   KYC_VERIF: "Verificación KYC",
@@ -232,12 +234,124 @@ function ContractorDetail({
   )
 }
 
+function InvitationModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const [email, setEmail] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [link, setLink] = useState('')
+  const [copied, setCopied] = useState(false)
+  const [error, setError] = useState('')
+
+  const handleGenerate = async () => {
+    if (!email) return
+    setError('')
+    setLoading(true)
+    try {
+      const result = await createInvitation(email)
+      setLink(result.link)
+    } catch {
+      setError('Error al generar el enlace. Intenta de nuevo.')
+    }
+    setLoading(false)
+  }
+
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(link)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  const handleClose = () => {
+    setEmail('')
+    setLink('')
+    setCopied(false)
+    setError('')
+    onClose()
+  }
+
+  if (!open) return null
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={handleClose}>
+      <div className="w-full max-w-md border border-[#3c4b35] bg-[#0c1609] p-6" onClick={(e) => e.stopPropagation()}>
+        <div className="mb-6 flex items-center justify-between">
+          <h3 className="text-heading-sm font-bold text-[#f0ffe4]">Generar Invitación</h3>
+          <button onClick={handleClose} className="text-[#baccaf] hover:text-[#f0ffe4] transition-colors">
+            <X size={18} />
+          </button>
+        </div>
+
+        {!link ? (
+          <div className="space-y-4">
+            <div>
+              <label className="mb-2 block font-mono text-[10px] uppercase tracking-wider text-[#baccaf]">
+                Correo del contratista
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="contratista@company.com"
+                className="w-full border border-[#3c4b35] bg-[#182214] px-3 py-2 font-mono text-caption-mono text-[#dae6d0] placeholder:text-[#3c4b35] outline-none focus:border-[#42ff00]"
+              />
+            </div>
+            {error && (
+              <p className="font-mono text-[10px] text-[#ffb4ab]">{error}</p>
+            )}
+            <button
+              onClick={handleGenerate}
+              disabled={!email || loading}
+              className="flex w-full items-center justify-center gap-2 border border-[#42ff00] bg-[#42ff00] py-3 font-mono text-caption-mono font-bold uppercase tracking-wider text-[#083900] transition-all hover:brightness-110 disabled:opacity-50"
+            >
+              {loading ? (
+                <><Loader2 size={14} className="animate-spin" /> Generando...</>
+              ) : (
+                <><Link size={14} /> Generar Enlace</>
+              )}
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <p className="font-mono text-[10px] uppercase tracking-wider text-[#baccaf]">
+              Enlace generado para <span className="text-[#42ff00]">{email}</span>
+            </p>
+            <div className="flex items-center gap-2 border border-[#3c4b35] bg-[#182214] px-3 py-2">
+              <input
+                type="text"
+                readOnly
+                value={link}
+                className="flex-1 bg-transparent font-mono text-[11px] text-[#dae6d0] outline-none"
+              />
+              <button
+                onClick={handleCopy}
+                className="shrink-0 text-[#baccaf] hover:text-[#42ff00] transition-colors"
+              >
+                {copied ? (
+                  <span className="font-mono text-[10px] text-[#42ff00]">✓</span>
+                ) : (
+                  <Copy size={14} />
+                )}
+              </button>
+            </div>
+            <button
+              onClick={handleClose}
+              className="w-full border border-[#3c4b35] py-3 font-mono text-caption-mono uppercase tracking-wider text-[#baccaf] transition-colors hover:border-[#42ff00]"
+            >
+              Cerrar
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 function AdminDashboard() {
   const { data = [], isLoading, isError } = useQuery({
     queryKey: ["contractors"],
     queryFn: fetchContractors,
   })
   const [selectedContractor, setSelectedContractor] = useState<Contractor | null>(null)
+  const [inviteOpen, setInviteOpen] = useState(false)
   const [filter, setFilter] = useState<string>("all")
 
   const filtered = filter === "all" ? data : filter === "pending" ? data.filter(c => c.status === "pending") : data
@@ -270,6 +384,13 @@ function AdminDashboard() {
           <button className="flex items-center gap-2 border border-[#3c4b35] bg-[#232d1e] px-4 py-2 font-mono text-caption-mono uppercase tracking-wider text-[#dae6d0] transition-all hover:border-[#42ff00]">
             <Filter size={16} />
             BÚSQUEDA_AVANZADA
+          </button>
+          <button
+            onClick={() => setInviteOpen(true)}
+            className="flex items-center gap-2 border border-[#42ff00] bg-[#42ff00]/10 px-4 py-2 font-mono text-caption-mono uppercase tracking-wider text-[#42ff00] transition-all hover:bg-[#42ff00] hover:text-[#083900]"
+          >
+            <Link size={16} />
+            INVITAR
           </button>
         </div>
       </header>
@@ -517,6 +638,11 @@ function AdminDashboard() {
           onClose={() => setSelectedContractor(null)}
         />
       )}
+
+      <InvitationModal
+        open={inviteOpen}
+        onClose={() => setInviteOpen(false)}
+      />
 
       <style>{`
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
