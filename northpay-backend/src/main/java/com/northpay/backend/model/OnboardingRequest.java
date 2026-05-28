@@ -23,8 +23,23 @@ public class OnboardingRequest {
     // PENDING | IN_REVIEW | APPROVED | REJECTED
     private String status = "PENDING";
 
+    // datos personales del contratista (copiados al enviar onboarding)
+    private String fullName;
+    private String email;
+    private String phone;
+    private String phoneCode;
+    private String dateOfBirth;
+    private String address;
+    private String city;
+    private String state;
+    private String zipCode;
+    private String country;
+
     // revision individual de cada documento subido por el usuario
     private List<DocumentReview> documentReviews = new ArrayList<>();
+
+    // revision de los datos personales ingresados
+    private List<InformationReview> informationReviews = new ArrayList<>();
 
     // historial de acciones del trabajador sobre esta solicitud
     private List<ActionEntry> actionHistory = new ArrayList<>();
@@ -38,6 +53,20 @@ public class OnboardingRequest {
     @Data
     public static class DocumentReview {
         private String documentKey;
+        private String name;
+        private String url;
+        private String fileName;
+        // PENDING | APPROVED | REJECTED
+        private String status = "PENDING";
+        private String observation;
+        private String reviewedBy;
+        private LocalDateTime reviewedAt;
+    }
+
+    @Data
+    public static class InformationReview {
+        private String field;
+        private String value;
         // PENDING | APPROVED | REJECTED
         private String status = "PENDING";
         private String observation;
