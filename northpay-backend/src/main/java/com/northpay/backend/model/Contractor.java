@@ -23,6 +23,15 @@ public class Contractor {
 
     @NotBlank(message = "El país es obligatorio")
     private String country;
+    private String phone;
+    private String phoneCode;
+    private String dateOfBirth;
+    private String address;
+    private String city;
+    private String state;
+    private String zipCode;
+    private String signature;
+    private String signedAt;
     private String status; // Ej: "PENDING", "APPROVED", "REJECTED"
 
     // Aquí guardaremos las URLs de Cloudinary

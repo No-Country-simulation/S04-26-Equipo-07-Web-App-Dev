@@ -12,6 +12,9 @@ export const requestService = {
   reviewDocument: (id: string, key: string, data: object) =>
     workerAxios.put(`/worker/requests/${id}/documents/${key}/review`, data),
 
+  reviewInformation: (id: string, field: string, data: object) =>
+    workerAxios.put(`/worker/requests/${id}/information/${field}/review`, data),
+
   updateStatus: (id: string, data: object) =>
     workerAxios.put(`/worker/requests/${id}/status`, data),
 

@@ -1,6 +1,7 @@
 package com.northpay.backend.service;
 
 import com.northpay.backend.dto.request.ReviewDocumentRequest;
+import com.northpay.backend.dto.request.ReviewInformationRequest;
 import com.northpay.backend.dto.request.UpdateRequestStatusRequest;
 import com.northpay.backend.exception.ResourceNotFoundException;
 import com.northpay.backend.model.OnboardingRequest;
@@ -96,6 +97,39 @@ public class RequestService {
         logService.logWorker(workerId, "DOCUMENT_REVIEWED",
             requestId + " | " + dto.getDocumentKey() + " = " + dto.getStatus());
         logService.logUser(req.getUserId(), "DOCUMENT_" + dto.getStatus(), dto.getDocumentKey());
+        return saved;
+    }
+
+    // revisa un campo de información personal: aprueba o rechaza con observación opcional
+    public OnboardingRequest reviewInformation(String requestId, String workerId, ReviewInformationRequest dto) {
+        OnboardingRequest req = findById(requestId);
+
+        Optional<OnboardingRequest.InformationReview> existing = req.getInformationReviews().stream()
+            .filter(r -> r.getField().equals(dto.getField()))
+            .findFirst();
+
+        OnboardingRequest.InformationReview review;
+        if (existing.isPresent()) {
+            review = existing.get();
+        } else {
+            review = new OnboardingRequest.InformationReview();
+            review.setField(dto.getField());
+            req.getInformationReviews().add(review);
+        }
+
+        review.setStatus(dto.getStatus());
+        review.setObservation(dto.getObservation());
+        review.setReviewedBy(workerId);
+        review.setReviewedAt(LocalDateTime.now());
+
+        addAction(req, workerId, "INFO_" + dto.getStatus(), dto.getField());
+
+        OnboardingRequest saved = requestRepository.save(req);
+
+        notificationService.notifyUser(req.getUserId(), Map.of("field", dto.getField(), "status", dto.getStatus()));
+        logService.logWorker(workerId, "INFO_REVIEWED",
+            requestId + " | " + dto.getField() + " = " + dto.getStatus());
+        logService.logUser(req.getUserId(), "INFO_" + dto.getStatus(), dto.getField());
         return saved;
     }
 

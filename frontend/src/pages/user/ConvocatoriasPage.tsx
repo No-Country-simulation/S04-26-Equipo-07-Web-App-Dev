@@ -5,7 +5,7 @@ import { convocatoriaService } from '@/lib/services/user/convocatoria.service'
 import { companyService } from '@/lib/services/user/company.service'
 import { useUserAuth } from '@/contexts/UserAuthContext'
 import { Plus, X, Eye, ChevronRight, ChevronLeft, Users } from 'lucide-react'
-import ReactQuill from 'react-quill'
+import ReactQuill from 'react-quill-new'
 import 'react-quill-new/dist/quill.snow.css';
 
 // ─── Types ───────────────────────────────────────────────────────────────────

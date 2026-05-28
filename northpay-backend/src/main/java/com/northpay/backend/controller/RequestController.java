@@ -1,6 +1,7 @@
 package com.northpay.backend.controller;
 
 import com.northpay.backend.dto.request.ReviewDocumentRequest;
+import com.northpay.backend.dto.request.ReviewInformationRequest;
 import com.northpay.backend.dto.request.UpdateRequestStatusRequest;
 import com.northpay.backend.model.OnboardingRequest;
 import com.northpay.backend.service.RequestService;
@@ -50,6 +51,16 @@ public class RequestController {
             @AuthenticationPrincipal UserDetails principal) {
         dto.setDocumentKey(key);
         return ResponseEntity.ok(requestService.reviewDocument(id, principal.getUsername(), dto));
+    }
+
+    @PutMapping("/{id}/information/{field}/review")
+    public ResponseEntity<OnboardingRequest> reviewInformation(
+            @PathVariable String id,
+            @PathVariable String field,
+            @Valid @RequestBody ReviewInformationRequest dto,
+            @AuthenticationPrincipal UserDetails principal) {
+        dto.setField(field);
+        return ResponseEntity.ok(requestService.reviewInformation(id, principal.getUsername(), dto));
     }
 
     @PutMapping("/{id}/status")

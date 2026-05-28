@@ -3,14 +3,15 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { requestService } from '@/lib/services/worker/request.service'
 import { createSocketClient } from '@/lib/websocket/socket'
 import { Client } from '@stomp/stompjs'
-import { RefreshCw, Eye, CheckCircle, Clock, X, ExternalLink } from 'lucide-react'
+import { RefreshCw, Eye, CheckCircle, Clock, X, ExternalLink, ChevronDown, Bookmark } from 'lucide-react'
 
 type DocReview = { documentKey: string; name?: string; url?: string; fileName?: string; status: string; observation?: string }
+type InfoReview = { field: string; value: string; status: string; observation?: string }
 type ActionEntry = { workerId: string; action: string; notes: string; timestamp: string }
 type PaymentSummary = { bankName?: string; accountType?: string; currency?: string }
 type ContractSummary = { signature?: string; signedAt?: string; accepted?: boolean }
 type Request = {
-  informationReviews: any
+  informationReviews: InfoReview[]
   id: string
   userId: string
   assignedWorkerId?: string
@@ -28,7 +29,6 @@ type Request = {
   actionHistory: ActionEntry[]
   createdAt: string
   updatedAt: string
-  // campos del onboarding completo
   documentUrls?: Record<string, string>
   paymentSummary?: PaymentSummary
   contractSummary?: ContractSummary
@@ -58,277 +58,439 @@ const FIELD_LABELS: Record<string, string> = {
 
 function DetailPanel({ req, onClose }: { req: Request; onClose: () => void }) {
   const qc = useQueryClient()
-  const [reviewingDoc, setReviewingDoc] = useState<string | null>(null)
-  const [infoPage, setInfoPage] = useState(0)
-  const [docReviews, setDocReviews] = useState(req.documentReviews)
-  const PER_PAGE = 3
 
-  const updateDocStatus = (key: string, status: string) => {
-    setDocReviews(prev => prev.map(d => d.documentKey === key ? { ...d, status } : d))
-    setReviewingDoc(null)
+  const [openSections, setOpenSections] = useState<Set<string>>(
+    new Set(['personal', 'documentos', 'pago_contrato', 'historial'])
+  )
+  const [infoReviews, setInfoReviews] = useState<InfoReview[]>(req.informationReviews ?? [])
+  const [docReviews, setDocReviews] = useState<DocReview[]>(req.documentReviews ?? [])
+  const [flaggedInfo, setFlaggedInfo] = useState<Set<string>>(new Set())
+  const [flaggedDocs, setFlaggedDocs] = useState<Set<string>>(new Set())
+  const [rejectTarget, setRejectTarget] = useState<{ type: 'info' | 'doc' | 'overall'; key: string } | null>(null)
+  const [rejectNote, setRejectNote] = useState('')
+
+  const toggleSection = (key: string) => {
+    setOpenSections(prev => {
+      const next = new Set(prev)
+      if (next.has(key)) next.delete(key)
+      else next.add(key)
+      return next
+    })
   }
 
-  const approveDoc = useMutation({
-    mutationFn: (key: string) => requestService.reviewDocument(req.id, key, { status: 'APPROVED' }),
-    onSuccess: (_data, key) => {
+  const reviewDocMut = useMutation({
+    mutationFn: ({ key, status, observation }: { key: string; status: string; observation?: string }) =>
+      requestService.reviewDocument(req.id, key, { status, observation }),
+    onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: ['requests'] })
-      updateDocStatus(key, 'APPROVED')
+      setDocReviews(prev => prev.map(d => d.documentKey === vars.key ? { ...d, status: vars.status } : d))
+      setFlaggedDocs(prev => { const n = new Set(prev); n.delete(vars.key); return n })
     },
   })
-  const rejectDoc = useMutation({
-    mutationFn: (key: string) => requestService.reviewDocument(req.id, key, { status: 'REJECTED' }),
-    onSuccess: (_data, key) => {
+
+  const reviewInfoMut = useMutation({
+    mutationFn: ({ field, status, observation }: { field: string; status: string; observation?: string }) =>
+      requestService.reviewInformation(req.id, field, { status, observation }),
+    onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: ['requests'] })
-      updateDocStatus(key, 'REJECTED')
+      setInfoReviews(prev => prev.map(r => r.field === vars.field ? { ...r, status: vars.status } : r))
+      setFlaggedInfo(prev => { const n = new Set(prev); n.delete(vars.field); return n })
     },
   })
-  const approve = useMutation({
-    mutationFn: () => requestService.updateStatus(req.id, { status: 'APPROVED', notes: 'Documentos verificados' }),
+
+  const approveMut = useMutation({
+    mutationFn: () => requestService.updateStatus(req.id, { status: 'APPROVED', notes: 'Información verificada' }),
     onSuccess: async () => { await qc.refetchQueries({ queryKey: ['requests'] }); onClose() },
   })
-  const reject = useMutation({
-    mutationFn: () => requestService.updateStatus(req.id, { status: 'REJECTED', notes: 'Documentos no válidos' }),
+  const rejectMut = useMutation({
+    mutationFn: (notes: string) => requestService.updateStatus(req.id, { status: 'REJECTED', notes }),
     onSuccess: async () => { await qc.refetchQueries({ queryKey: ['requests'] }); onClose() },
   })
-  const deleteReq = useMutation({
+  const deleteMut = useMutation({
     mutationFn: () => requestService.deleteRejected(req.id),
     onSuccess: async () => { await qc.refetchQueries({ queryKey: ['requests'] }); onClose() },
   })
 
+  const confirmReject = () => {
+    if (!rejectTarget) return
+    if (rejectTarget.type === 'info') {
+      reviewInfoMut.mutate({ field: rejectTarget.key, status: 'REJECTED', observation: rejectNote })
+    } else if (rejectTarget.type === 'doc') {
+      reviewDocMut.mutate({ key: rejectTarget.key, status: 'REJECTED', observation: rejectNote })
+    } else {
+      rejectMut.mutate(rejectNote || 'Solicitud rechazada')
+    }
+    setRejectTarget(null)
+    setRejectNote('')
+  }
+
+  const infoApproved = infoReviews.filter(r => r.status === 'APPROVED').length
+  const docsApproved = docReviews.filter(d => d.status === 'APPROVED').length
+  const allInfoDone = infoReviews.length > 0 && infoReviews.every(r => r.status !== 'PENDING')
+  const allDocsDone = docReviews.length > 0 && docReviews.every(d => d.status !== 'PENDING')
+  const hasPayment = req.paymentSummary && (req.paymentSummary.bankName || req.paymentSummary.accountType)
+  const hasContract = req.contractSummary && req.contractSummary.signature
+  const extraDocUrls = req.documentUrls
+    ? Object.entries(req.documentUrls).filter(([key]) => !docReviews.some(d => d.documentKey === key))
+    : []
+
+  const statusBadge = (status: string, flagged?: boolean) => {
+    if (flagged) return (
+      <span className="flex items-center gap-1 font-mono text-[10px] text-yellow-400">
+        <Bookmark size={11} /> Ver después
+      </span>
+    )
+    switch (status) {
+      case 'APPROVED': return <span className="flex items-center gap-1 font-mono text-[10px] text-[#42ff00]"><CheckCircle size={11} /> Aprobado</span>
+      case 'REJECTED': return <span className="flex items-center gap-1 font-mono text-[10px] text-[#ffb4ab]"><X size={11} /> Rechazado</span>
+      default: return <span className="flex items-center gap-1 font-mono text-[10px] text-[#baccaf]"><Clock size={11} /> Pendiente</span>
+    }
+  }
+
+  const pendingBusy = reviewDocMut.isPending || reviewInfoMut.isPending
+
+  const itemActions = (type: 'info' | 'doc', key: string, status: string, flagged: boolean) => {
+    if (status !== 'PENDING') return null
+    const onApprove = () => type === 'info'
+      ? reviewInfoMut.mutate({ field: key, status: 'APPROVED' })
+      : reviewDocMut.mutate({ key, status: 'APPROVED' })
+    const onFlag = () => type === 'info'
+      ? setFlaggedInfo(prev => { const n = new Set(prev); if (n.has(key)) n.delete(key); else n.add(key); return n })
+      : setFlaggedDocs(prev => { const n = new Set(prev); if (n.has(key)) n.delete(key); else n.add(key); return n })
+
+    return (
+      <div className="flex items-center gap-1.5 mt-2">
+        <button
+          onClick={onApprove}
+          disabled={pendingBusy}
+          className="border border-[#42ff00] px-2 py-0.5 font-mono text-[10px] text-[#42ff00] hover:bg-[#42ff00] hover:text-[#083900] disabled:opacity-50 transition-colors"
+        >
+          ✓ Aprobar
+        </button>
+        <button
+          onClick={() => { setRejectTarget({ type, key }); setRejectNote('') }}
+          disabled={pendingBusy}
+          className="border border-[#ffb4ab] px-2 py-0.5 font-mono text-[10px] text-[#ffb4ab] hover:bg-[#ffb4ab]/20 disabled:opacity-50 transition-colors"
+        >
+          ✗ Rechazar
+        </button>
+        <button
+          onClick={onFlag}
+          disabled={pendingBusy}
+          className={`border px-2 py-0.5 font-mono text-[10px] transition-colors disabled:opacity-50 ${
+            flagged
+              ? 'border-yellow-400 text-yellow-400 bg-yellow-400/10'
+              : 'border-[#3c4b35] text-[#baccaf] hover:border-yellow-400 hover:text-yellow-400'
+          }`}
+        >
+          🔖 {flagged ? 'Quitar' : 'Ver después'}
+        </button>
+      </div>
+    )
+  }
+
+  const AccordionHeader = ({
+    sectionKey, label, badge, done,
+  }: { sectionKey: string; label: string; badge?: string; done?: boolean }) => (
+    <button
+      onClick={() => toggleSection(sectionKey)}
+      className="w-full flex items-center justify-between px-6 py-3 bg-[#141e10] hover:bg-[#1a2614] transition-colors"
+    >
+      <div className="flex items-center gap-3">
+        <span className="font-mono text-[10px] uppercase tracking-widest text-[#f0ffe4]">{label}</span>
+        {badge !== undefined && (
+          <span className="border border-[#3c4b35] px-1.5 py-0.5 font-mono text-[9px] text-[#baccaf]">{badge}</span>
+        )}
+        {done && <CheckCircle size={12} className="text-[#42ff00]" />}
+      </div>
+      <ChevronDown
+        size={14}
+        className={`text-[#baccaf] transition-transform duration-200 ${openSections.has(sectionKey) ? 'rotate-180' : ''}`}
+      />
+    </button>
+  )
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm" onClick={onClose}>
-      <div className="w-full max-w-2xl max-h-[90vh] flex flex-col border border-[#3c4b35] bg-[#0c1609] shadow-2xl" onClick={e => e.stopPropagation()}>
+      <div className="w-full max-w-3xl max-h-[92vh] flex flex-col border border-[#3c4b35] bg-[#0c1609] shadow-2xl" onClick={e => e.stopPropagation()}>
+
+        {/* Header */}
         <div className="shrink-0 flex items-center justify-between border-b border-[#3c4b35] px-6 py-4">
-          <h2 className="font-mono text-[13px] uppercase tracking-wider text-[#f0ffe4]">
-            Solicitud_<span className="text-[#42ff00]">#{req.id.slice(-8).toUpperCase()}</span>
-          </h2>
+          <div className="flex items-center gap-3">
+            <h2 className="font-mono text-[13px] uppercase tracking-wider text-[#f0ffe4]">
+              Solicitud_<span className="text-[#42ff00]">#{req.id.slice(-8).toUpperCase()}</span>
+            </h2>
+            <span className={`border px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider ${STATUS_COLORS[req.status] ?? 'border-[#3c4b35] text-[#baccaf]'}`}>
+              {STATUS_LABELS[req.status] ?? req.status}
+            </span>
+          </div>
           <button onClick={onClose} className="text-[#baccaf] hover:text-[#f0ffe4]"><X size={18} /></button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
-          <div className="grid grid-cols-2 gap-4 border border-[#3c4b35] bg-[#141e10] p-4">
-            <div>
-              <p className="font-mono text-label-mono-bold uppercase tracking-widest text-[#3c4b35]">Estado</p>
-              <span className={`border px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider ${STATUS_COLORS[req.status] ?? 'border-[#3c4b35] text-[#baccaf]'}`}>
-                {STATUS_LABELS[req.status] ?? req.status}
-              </span>
+        {/* Meta strip */}
+        <div className="shrink-0 grid grid-cols-3 border-b border-[#3c4b35] bg-[#141e10]">
+          {([
+            ['Usuario', req.userId.slice(-12)],
+            ['Trabajador', req.assignedWorkerId?.slice(-12) ?? '—'],
+            ['Actualizado', new Date(req.updatedAt).toLocaleDateString('es-AR')],
+          ] as [string, string][]).map(([label, value]) => (
+            <div key={label} className="px-6 py-3 border-r border-[#3c4b35] last:border-r-0">
+              <p className="font-mono text-[9px] uppercase tracking-widest text-[#3c4b35]">{label}</p>
+              <p className="font-mono text-[11px] text-[#dae6d0] mt-0.5">{value}</p>
             </div>
-            <div>
-              <p className="font-mono text-label-mono-bold uppercase tracking-widest text-[#3c4b35]">Trabajador Asignado</p>
-              <p className="font-mono text-caption-mono text-[#dae6d0]">{req.assignedWorkerId ?? '—'}</p>
-            </div>
-            <div>
-              <p className="font-mono text-label-mono-bold uppercase tracking-widest text-[#3c4b35]">Última actualización</p>
-              <p className="font-mono text-caption-mono text-[#dae6d0]">
-                {new Date(req.updatedAt).toLocaleString('es-AR')}
+          ))}
+        </div>
+
+        {/* Scrollable content */}
+        <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-[#3c4b35]">
+
+          {/* Inline rejection panel */}
+          {rejectTarget && (
+            <div className="border-b border-[#ffb4ab]/40 bg-[#1a0d0d] px-6 py-4">
+              <p className="font-mono text-[11px] text-[#ffb4ab] mb-3">
+                Motivo de rechazo
+                {rejectTarget.type === 'info' && ` — ${FIELD_LABELS[rejectTarget.key] ?? rejectTarget.key}`}
+                {rejectTarget.type === 'doc' && ` — ${rejectTarget.key}`}
+                {rejectTarget.type === 'overall' && ' (solicitud completa)'}
               </p>
+              <textarea
+                value={rejectNote}
+                onChange={e => setRejectNote(e.target.value)}
+                placeholder="Motivo (opcional)"
+                rows={2}
+                className="w-full bg-[#141e10] border border-[#3c4b35] px-3 py-2 font-mono text-[11px] text-[#dae6d0] placeholder:text-[#3c4b35] resize-none focus:outline-none focus:border-[#ffb4ab]"
+              />
+              <div className="flex gap-2 mt-2 justify-end">
+                <button
+                  onClick={() => { setRejectTarget(null); setRejectNote('') }}
+                  className="border border-[#3c4b35] px-3 py-1 font-mono text-[10px] text-[#baccaf] hover:border-[#42ff00]"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={confirmReject}
+                  className="border border-[#ffb4ab] bg-[#ffb4ab] px-3 py-1 font-mono text-[10px] font-bold text-[#1a0d0d] hover:brightness-110"
+                >
+                  Confirmar rechazo
+                </button>
+              </div>
             </div>
-          </div>
+          )}
 
-          {docReviews.length > 0 && (
-            <div>
-              <p className="mb-2 font-mono text-[10px] uppercase tracking-wider text-[#baccaf]">Documentos</p>
-              <div className="space-y-1">
-                {docReviews.map(d => (
-                  <div key={d.documentKey} className="flex items-center justify-between border border-[#3c4b35] px-4 py-2">
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono text-[11px] text-[#dae6d0]">{d.name || d.documentKey}</span>
-                      {d.url && (
-                        <a href={d.url} target="_blank" rel="noopener noreferrer"
-                           className="font-mono text-[10px] text-[#8ab47a] hover:text-[#a0d090] underline">
-                          Ver
-                        </a>
-                      )}
-
-                    </div>
-                    {reviewingDoc === d.documentKey && d.status === 'PENDING' ? (
-                      <div className="flex items-center gap-2">
-                        <button onClick={() => rejectDoc.mutate(d.documentKey)} disabled={rejectDoc.isPending}
-                          className="border border-[#ffb4ab] px-2 py-0.5 font-mono text-[10px] text-[#ffb4ab] hover:bg-[#ffb4ab]/20 disabled:opacity-50">
-                          Rechazar
-                        </button>
-                        <button onClick={() => approveDoc.mutate(d.documentKey)} disabled={approveDoc.isPending}
-                          className="border border-[#42ff00] bg-[#42ff00] px-2 py-0.5 font-mono text-[10px] font-bold text-[#083900] hover:brightness-110 disabled:opacity-50">
-                          Aprobar
-                        </button>
+          {/* ─── PASO 1: Información Personal ─── */}
+          {infoReviews.length > 0 && (
+            <div className="border-b border-[#3c4b35]">
+              <AccordionHeader
+                sectionKey="personal"
+                label="Información Personal"
+                badge={`${infoApproved}/${infoReviews.length}`}
+                done={allInfoDone}
+              />
+              {openSections.has('personal') && (
+                <div className="divide-y divide-[#3c4b35] bg-[#0c1609]">
+                  {infoReviews.map(info => {
+                    const isFlagged = flaggedInfo.has(info.field)
+                    return (
+                      <div key={info.field} className="px-6 py-3">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="min-w-0">
+                            <p className="font-mono text-[9px] uppercase tracking-widest text-[#3c4b35]">
+                              {FIELD_LABELS[info.field] ?? info.field}
+                            </p>
+                            <p className="font-mono text-[12px] text-[#dae6d0] mt-0.5 break-words">{info.value}</p>
+                          </div>
+                          <div className="shrink-0">{statusBadge(info.status, isFlagged)}</div>
+                        </div>
+                        {itemActions('info', info.field, info.status, isFlagged)}
                       </div>
-                    ) : (
-                      d.status === 'APPROVED'
-                        ? <span className="flex items-center gap-1 font-mono text-[10px] text-[#42ff00]"><CheckCircle size={12} /> Aprobado</span>
-                        : d.status === 'REJECTED'
-                          ? <span className="flex items-center gap-1 font-mono text-[10px] text-[#ffb4ab]"><X size={12} /> Rechazado</span>
-                          : <span className="flex items-center gap-1 font-mono text-[10px] text-[#baccaf]"><Clock size={12} /> Pendiente</span>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {req.informationReviews?.length > 0 && (
-            <div className="space-y-2">
-              <p className="mb-2 font-mono text-[10px] uppercase tracking-wider text-[#baccaf]">Información Personal</p>
-              {req.informationReviews.slice(infoPage * PER_PAGE, (infoPage + 1) * PER_PAGE).map((info: any, i: number) => (
-                <div key={info.field ?? i} className="border border-[#3c4b35] px-4 py-2">
-                  <p className="font-mono text-[10px] text-[#baccaf]">{FIELD_LABELS[info.field] || info.field}</p>
-                  <p className="font-mono text-[11px] text-[#dae6d0]">{info.value}</p>
-                  {info.status === 'APPROVED'
-                    ? <span className="flex items-center gap-1 font-mono text-[10px] text-[#42ff00]"><CheckCircle size={12} /> Aprobado</span>
-                    : info.status === 'REJECTED'
-                      ? <span className="flex items-center gap-1 font-mono text-[10px] text-[#ffb4ab]"><X size={12} /> Rechazado</span>
-                      : <span className="flex items-center gap-1 font-mono text-[10px] text-[#baccaf]"><Clock size={12} /> Pendiente</span>
-                  }
+                    )
+                  })}
                 </div>
-              ))}
-              <div className="flex items-center justify-end gap-2 pt-1">
-                <button
-                  onClick={() => setInfoPage(p => Math.max(0, p - 1))}
-                  disabled={infoPage === 0}
-                  className="font-mono text-[10px] text-[#baccaf] hover:text-[#f0ffe4] disabled:opacity-30"
-                >
-                  Anterior
-                </button>
-                <span className="font-mono text-[10px] text-[#3c4b35]">
-                  {infoPage + 1} / {Math.ceil(req.informationReviews.length / PER_PAGE)}
-                </span>
-                <button
-                  onClick={() => setInfoPage(p => Math.min(Math.ceil(req.informationReviews.length / PER_PAGE) - 1, p + 1))}
-                  disabled={infoPage >= Math.ceil(req.informationReviews.length / PER_PAGE) - 1}
-                  className="font-mono text-[10px] text-[#baccaf] hover:text-[#f0ffe4] disabled:opacity-30"
-                >
-                  Siguiente
-                </button>
-              </div>
+              )}
             </div>
           )}
 
+          {/* ─── PASO 2: Documentos ─── */}
+          {(docReviews.length > 0 || extraDocUrls.length > 0) && (
+            <div className="border-b border-[#3c4b35]">
+              <AccordionHeader
+                sectionKey="documentos"
+                label="Documentos"
+                badge={`${docsApproved}/${docReviews.length}`}
+                done={allDocsDone && docReviews.length > 0}
+              />
+              {openSections.has('documentos') && (
+                <div className="divide-y divide-[#3c4b35] bg-[#0c1609]">
+                  {docReviews.map(doc => {
+                    const isFlagged = flaggedDocs.has(doc.documentKey)
+                    const url = doc.url ?? req.documentUrls?.[doc.documentKey]
+                    return (
+                      <div key={doc.documentKey} className="px-6 py-3">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="min-w-0">
+                            <p className="font-mono text-[9px] uppercase tracking-widest text-[#3c4b35]">
+                              {doc.name ?? doc.documentKey}
+                            </p>
+                            {url && (
+                              <a
+                                href={url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 mt-1 font-mono text-[10px] text-[#42ff00] hover:text-[#a0ff80] transition-colors"
+                              >
+                                <ExternalLink size={10} /> Ver documento
+                              </a>
+                            )}
+                          </div>
+                          <div className="shrink-0">{statusBadge(doc.status, isFlagged)}</div>
+                        </div>
+                        {itemActions('doc', doc.documentKey, doc.status, isFlagged)}
+                      </div>
+                    )
+                  })}
+                  {extraDocUrls.map(([key, url]) => (
+                    <div key={key} className="px-6 py-3">
+                      <p className="font-mono text-[9px] uppercase tracking-widest text-[#3c4b35] capitalize">{key}</p>
+                      <a
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 mt-1 font-mono text-[10px] text-[#42ff00] hover:text-[#a0ff80] transition-colors"
+                      >
+                        <ExternalLink size={10} /> Ver documento
+                      </a>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ─── PASO 3: Pago & Contrato ─── */}
+          {(hasPayment || hasContract) && (
+            <div className="border-b border-[#3c4b35]">
+              <AccordionHeader sectionKey="pago_contrato" label="Pago & Contrato" />
+              {openSections.has('pago_contrato') && (
+                <div className="px-6 py-4 space-y-5 bg-[#0c1609]">
+                  {hasPayment && (
+                    <div>
+                      <p className="font-mono text-[9px] uppercase tracking-widest text-[#3c4b35] mb-2">Método de Pago</p>
+                      <div className="border border-[#3c4b35] bg-[#141e10] p-4 grid grid-cols-3 gap-4">
+                        {req.paymentSummary!.bankName && (
+                          <div>
+                            <p className="font-mono text-[9px] uppercase tracking-widest text-[#3c4b35]">Banco</p>
+                            <p className="font-mono text-[11px] text-[#dae6d0]">{req.paymentSummary!.bankName}</p>
+                          </div>
+                        )}
+                        {req.paymentSummary!.accountType && (
+                          <div>
+                            <p className="font-mono text-[9px] uppercase tracking-widest text-[#3c4b35]">Tipo</p>
+                            <p className="font-mono text-[11px] text-[#dae6d0] capitalize">{req.paymentSummary!.accountType}</p>
+                          </div>
+                        )}
+                        {req.paymentSummary!.currency && (
+                          <div>
+                            <p className="font-mono text-[9px] uppercase tracking-widest text-[#3c4b35]">Moneda</p>
+                            <p className="font-mono text-[11px] text-[#dae6d0]">{req.paymentSummary!.currency}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  {hasContract && (
+                    <div>
+                      <p className="font-mono text-[9px] uppercase tracking-widest text-[#3c4b35] mb-2">Contrato</p>
+                      <div className="border border-[#3c4b35] bg-[#141e10] p-4 space-y-2">
+                        <div className="flex items-center justify-between gap-4">
+                          <div className="min-w-0">
+                            <p className="font-mono text-[9px] uppercase tracking-widest text-[#3c4b35]">Firma</p>
+                            <p className="font-mono text-[11px] text-[#dae6d0] break-words">{req.contractSummary!.signature}</p>
+                          </div>
+                          <span className={`shrink-0 border px-2 py-0.5 font-mono text-[9px] uppercase tracking-wider ${
+                            req.contractSummary!.accepted ? 'border-[#42ff00] text-[#42ff00]' : 'border-[#ffb4ab] text-[#ffb4ab]'
+                          }`}>
+                            {req.contractSummary!.accepted ? 'Aceptado' : 'Pendiente'}
+                          </span>
+                        </div>
+                        {req.contractSummary!.signedAt && (
+                          <div>
+                            <p className="font-mono text-[9px] uppercase tracking-widest text-[#3c4b35]">Firmado</p>
+                            <p className="font-mono text-[11px] text-[#dae6d0]">
+                              {new Date(req.contractSummary!.signedAt).toLocaleString('es-AR')}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ─── PASO 4: Historial de Acciones ─── */}
           {req.actionHistory.length > 0 && (
             <div>
-              <p className="mb-2 font-mono text-[10px] uppercase tracking-wider text-[#baccaf]">Historial</p>
-              <div className="max-h-32 overflow-y-auto space-y-1 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-[#3c4b35]">
-                {req.actionHistory.map((a, i) => (
-                  <div key={i} className="border border-[#3c4b35] px-4 py-2">
-                    <span className="font-mono text-[10px] text-[#42ff00]">{a.action}</span>
-                    <span className="ml-2 font-mono text-[10px] text-[#baccaf]">{a.notes}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* documentos subidos a cloudinary */}
-          {req.documentUrls && Object.keys(req.documentUrls).length > 0 && (
-            <div>
-              <p className="mb-2 font-mono text-[10px] uppercase tracking-wider text-[#baccaf]">Documentos Subidos</p>
-              <div className="space-y-1">
-                {Object.entries(req.documentUrls).map(([key, url]) => (
-                  <div key={key} className="flex items-center justify-between border border-[#3c4b35] px-4 py-2">
-                    <span className="font-mono text-[11px] text-[#dae6d0] capitalize">{key}</span>
-                    <a
-                      href={url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-1 font-mono text-[10px] text-[#42ff00] hover:text-[#a0ff80] transition-colors"
-                    >
-                      <ExternalLink size={10} />
-                      Ver
-                    </a>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* metodo de pago */}
-          {req.paymentSummary && (req.paymentSummary.bankName || req.paymentSummary.accountType) && (
-            <div>
-              <p className="mb-2 font-mono text-[10px] uppercase tracking-wider text-[#baccaf]">Método de Pago</p>
-              <div className="border border-[#3c4b35] bg-[#141e10] p-4 grid grid-cols-3 gap-4">
-                {req.paymentSummary.bankName && (
-                  <div>
-                    <p className="font-mono text-[9px] uppercase tracking-widest text-[#3c4b35]">Banco</p>
-                    <p className="font-mono text-[11px] text-[#dae6d0]">{req.paymentSummary.bankName}</p>
-                  </div>
-                )}
-                {req.paymentSummary.accountType && (
-                  <div>
-                    <p className="font-mono text-[9px] uppercase tracking-widest text-[#3c4b35]">Tipo</p>
-                    <p className="font-mono text-[11px] text-[#dae6d0] capitalize">{req.paymentSummary.accountType}</p>
-                  </div>
-                )}
-                {req.paymentSummary.currency && (
-                  <div>
-                    <p className="font-mono text-[9px] uppercase tracking-widest text-[#3c4b35]">Moneda</p>
-                    <p className="font-mono text-[11px] text-[#dae6d0]">{req.paymentSummary.currency}</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* informacion del contrato */}
-          {req.contractSummary && req.contractSummary.signature && (
-            <div>
-              <p className="mb-2 font-mono text-[10px] uppercase tracking-wider text-[#baccaf]">Contrato</p>
-              <div className="border border-[#3c4b35] bg-[#141e10] p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-mono text-[9px] uppercase tracking-widest text-[#3c4b35]">Firma</p>
-                    <p className="font-mono text-[11px] text-[#dae6d0]">{req.contractSummary.signature}</p>
-                  </div>
-                  <span className={`border px-2 py-0.5 font-mono text-[9px] uppercase tracking-wider ${
-                    req.contractSummary.accepted
-                      ? 'border-[#42ff00] text-[#42ff00]'
-                      : 'border-[#ffb4ab] text-[#ffb4ab]'
-                  }`}>
-                    {req.contractSummary.accepted ? 'Aceptado' : 'Pendiente'}
-                  </span>
+              <AccordionHeader
+                sectionKey="historial"
+                label="Historial de Acciones"
+                badge={String(req.actionHistory.length)}
+              />
+              {openSections.has('historial') && (
+                <div className="divide-y divide-[#3c4b35] bg-[#0c1609] max-h-48 overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-[#3c4b35]">
+                  {[...req.actionHistory].reverse().map((a, i) => (
+                    <div key={i} className="px-6 py-2.5 flex items-start gap-3">
+                      <span className="shrink-0 border border-[#42ff00]/30 bg-[#42ff00]/5 px-2 py-0.5 font-mono text-[9px] text-[#42ff00] uppercase">
+                        {a.action}
+                      </span>
+                      <div className="min-w-0">
+                        <p className="font-mono text-[10px] text-[#dae6d0] break-words">{a.notes}</p>
+                        <p className="font-mono text-[9px] text-[#3c4b35] mt-0.5">
+                          {a.workerId?.slice(-8)} · {new Date(a.timestamp).toLocaleString('es-AR')}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                {req.contractSummary.signedAt && (
-                  <div>
-                    <p className="font-mono text-[9px] uppercase tracking-widest text-[#3c4b35]">Firmado</p>
-                    <p className="font-mono text-[11px] text-[#dae6d0]">
-                      {new Date(req.contractSummary.signedAt).toLocaleString('es-AR')}
-                    </p>
-                  </div>
-                )}
-              </div>
+              )}
             </div>
           )}
         </div>
 
-        <div className="shrink-0 flex justify-end gap-3 border-t border-[#3c4b35] px-6 py-4">
-          <button onClick={onClose} className="border border-[#3c4b35] px-4 py-2 font-mono text-[10px] uppercase tracking-wider text-[#baccaf] hover:border-[#42ff00] hover:text-[#42ff00]">
+        {/* Footer */}
+        <div className="shrink-0 flex justify-end gap-3 border-t border-[#3c4b35] px-6 py-4 bg-[#0c1609]">
+          <button
+            onClick={onClose}
+            className="border border-[#3c4b35] px-4 py-2 font-mono text-[10px] uppercase tracking-wider text-[#baccaf] hover:border-[#42ff00] hover:text-[#42ff00]"
+          >
             Cerrar
           </button>
-          {req.status === 'IN_REVIEW' && (
+          {req.status === 'IN_REVIEW' && !rejectTarget && (
             <>
               <button
-                onClick={() => reject.mutate()}
-                disabled={reject.isPending}
+                onClick={() => { setRejectTarget({ type: 'overall', key: req.id }); setRejectNote('') }}
+                disabled={rejectMut.isPending}
                 className="border border-[#ffb4ab] bg-[#ffb4ab]/10 px-4 py-2 font-mono text-[10px] uppercase tracking-wider text-[#ffb4ab] hover:bg-[#ffb4ab]/20 disabled:opacity-50"
               >
-                Rechazar
+                Rechazar Solicitud
               </button>
               <button
-                onClick={() => approve.mutate()}
-                disabled={approve.isPending}
+                onClick={() => approveMut.mutate()}
+                disabled={approveMut.isPending}
                 className="border border-[#42ff00] bg-[#42ff00] px-4 py-2 font-mono text-[10px] font-bold uppercase tracking-wider text-[#083900] hover:brightness-110 disabled:opacity-50"
               >
-                Aprobar
+                {approveMut.isPending ? 'Aprobando...' : 'Aprobar Solicitud'}
               </button>
             </>
           )}
           {req.status === 'REJECTED' && (
-            <>
-              <button
-                onClick={() => deleteReq.mutate()}
-                disabled={deleteReq.isPending}
-                className="border border-[#ffb4ab] px-4 py-2 font-mono text-[10px] uppercase tracking-wider text-[#ffb4ab] hover:bg-[#ffb4ab]/20 disabled:opacity-50"
-              >
-                Eliminar
-              </button>
-            </>
+            <button
+              onClick={() => deleteMut.mutate()}
+              disabled={deleteMut.isPending}
+              className="border border-[#ffb4ab] px-4 py-2 font-mono text-[10px] uppercase tracking-wider text-[#ffb4ab] hover:bg-[#ffb4ab]/20 disabled:opacity-50"
+            >
+              Eliminar
+            </button>
           )}
         </div>
       </div>
