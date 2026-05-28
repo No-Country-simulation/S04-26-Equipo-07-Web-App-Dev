@@ -33,7 +33,7 @@ export default function UserLayout() {
             </h2>
           </div>
           <p className="mt-1 font-mono text-[10px] uppercase tracking-wider text-[#3c4b35]">
-            Panel_Cliente_v1.0
+            Panel Contractor v1.0
           </p>
         </div>
 
