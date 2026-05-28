@@ -5,7 +5,6 @@ import lombok.Data;
 
 @Data
 public class ReviewDocumentRequest {
-    @NotBlank
     private String documentKey;
     // APPROVED | REJECTED
     @NotBlank

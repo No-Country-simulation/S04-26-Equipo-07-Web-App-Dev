@@ -59,4 +59,12 @@ public class RequestController {
             @AuthenticationPrincipal UserDetails principal) {
         return ResponseEntity.ok(requestService.updateStatus(id, principal.getUsername(), dto));
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteRejected(
+            @PathVariable String id,
+            @AuthenticationPrincipal UserDetails principal) {
+        requestService.deleteRejectedRequest(id, principal.getUsername());
+        return ResponseEntity.noContent().build();
+    }
 }

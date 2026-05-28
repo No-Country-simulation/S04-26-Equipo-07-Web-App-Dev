@@ -40,6 +40,7 @@ public class SecurityConfig {
                     "/api/auth/**",
                     "/api/worker/auth/**",
                     "/api/invitations/validate",
+                    "/api/onboarding",
                     "/api/payments/webhook",
                     "/api/convocatorias/*/apply",
                     "/api/convocatorias/*/view",

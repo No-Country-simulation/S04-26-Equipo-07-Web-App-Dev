@@ -26,6 +26,7 @@ public class RequestService {
     private final EmailService emailService;
     private final NotificationService notificationService;
     private final LogService logService;
+    private final InvitationService invitationService;
 
     public List<OnboardingRequest> findAll() {
         return requestRepository.findAll();
@@ -114,6 +115,7 @@ public class RequestService {
                 emailService.sendApprovalEmail(user.getEmail(), setupToken, user.getFirstName());
                 user.setStatus("pending_password");
                 userRepository.save(user);
+                invitationService.markAsApproved(user.getEmail());
             }
         }
 
@@ -123,6 +125,20 @@ public class RequestService {
             requestId + " → " + dto.getStatus());
         logService.logUser(req.getUserId(), "REQUEST_" + dto.getStatus(), dto.getNotes() != null ? dto.getNotes() : "");
         return saved;
+    }
+
+    // elimina una solicitud rechazada y resetea la invitacion
+    public void deleteRejectedRequest(String requestId, String workerId) {
+        OnboardingRequest req = findById(requestId);
+        if (!"REJECTED".equals(req.getStatus())) {
+            throw new IllegalArgumentException("solo se pueden eliminar solicitudes rechazadas");
+        }
+        User user = userRepository.findById(req.getUserId()).orElse(null);
+        requestRepository.delete(req);
+        if (user != null) {
+            invitationService.resetToResend(user.getEmail());
+        }
+        logService.logWorker(workerId, "REQUEST_DELETED", "solicitud rechazada eliminada: " + requestId);
     }
 
     private void addAction(OnboardingRequest req, String workerId, String action, String notes) {

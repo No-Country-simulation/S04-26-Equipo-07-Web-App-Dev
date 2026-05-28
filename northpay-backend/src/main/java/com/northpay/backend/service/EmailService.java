@@ -1,6 +1,6 @@
 package com.northpay.backend.service;
 
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -15,10 +15,10 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 @Service
-@RequiredArgsConstructor
 public class EmailService {
 
-    private final JavaMailSender mailSender;
+    @Autowired(required = false)
+    private JavaMailSender mailSender;
 
     @Value("${app.frontend.url}")
     private String frontendUrl;
@@ -26,7 +26,8 @@ public class EmailService {
     // envia email de invitacion con link de registro
     @Async
     public void sendInvitationEmail(String toEmail, String token, String inviterName) {
-        String link = frontendUrl + "/register?token=" + token;
+        if (mailSender == null) return;
+        String link = frontendUrl + "/onboarding/" + token;
         String html = renderTemplate("email/invitation.html", Map.of(
             "INVITER_NAME", inviterName,
             "REGISTRATION_LINK", link
@@ -37,6 +38,7 @@ public class EmailService {
     // envia email cuando el trabajador aprueba todos los documentos del onboarding
     @Async
     public void sendApprovalEmail(String toEmail, String setupToken, String userName) {
+        if (mailSender == null) return;
         String link = frontendUrl + "/set-password?token=" + setupToken;
         String html = renderTemplate("email/approval.html", Map.of(
             "USER_NAME", userName,
@@ -48,6 +50,7 @@ public class EmailService {
     // notifica al usuario que un documento fue rechazado con la observacion
     @Async
     public void sendDocumentRejectionEmail(String toEmail, String documentKey, String observation, String userName) {
+        if (mailSender == null) return;
         String html = renderTemplate("email/document-rejected.html", Map.of(
             "USER_NAME", userName,
             "DOCUMENT_KEY", documentKey,
