@@ -18,7 +18,7 @@ type Persona = {
 type Invitation = {
   id: string
   email: string
-  status: 'pending' | 'used' | 'expired' | 'cancelled' | 'completed' | 'resend'
+  status: 'pending' | 'used' | 'expired' | 'cancelled' | 'completed' | 'resend' | 'approved'
   token: string
   invitedBy: string
   expiresAt: string
@@ -165,6 +165,8 @@ export default function ClientesPage() {
                               ? 'bg-[#42ff00]/10 text-[#42ff00]'
                               : inv.status === 'completed'
                               ? 'bg-[#baccaf]/10 text-[#baccaf]'
+                              : inv.status === 'approved'
+                              ? 'bg-[#42ff00]/10 text-[#42ff00]'
                               : inv.status === 'resend'
                               ? 'bg-[#42ff00]/10 text-[#42ff00]'
                               : inv.status === 'used'
@@ -174,7 +176,7 @@ export default function ClientesPage() {
                               : 'bg-[#3c4b35] text-[#baccaf]'
                           }`}
                         >
-                          {inv.status === 'completed' ? 'completado' : inv.status === 'resend' ? 'reenviar' : inv.status}
+                          {inv.status === 'completed' ? 'completado' : inv.status === 'approved' ? 'aprobado' : inv.status === 'resend' ? 'reenviar' : inv.status}
                         </span>
                       </td>
                       <td className="px-5 py-4 font-mono text-[11px] text-[#baccaf]">
