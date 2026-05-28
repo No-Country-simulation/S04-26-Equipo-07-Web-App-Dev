@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { Eye, EyeOff } from "lucide-react"
-import { Input } from "./input"
+import { Input } from "@/components/ui/input"
 
 describe("Input", () => {
   it("renders with default props", () => {
