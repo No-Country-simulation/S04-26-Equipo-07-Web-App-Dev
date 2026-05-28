@@ -5,7 +5,8 @@ export const uploadToCloudinary = async (file: File) => {
   if (!cloudName || !preset) {
     throw new Error("Cloudinary config missing. Check VITE_CLOUDINARY_CLOUD_NAME and VITE_CLOUDINARY_UPLOAD_PRESET")
   }
-
+  console.log("Cloudinary config:", { cloudName, preset })
+  console.log("File:", file.name, file.type, file.size)
   const formData = new FormData()
   formData.append("file", file)
   formData.append("upload_preset", preset)
@@ -17,6 +18,7 @@ export const uploadToCloudinary = async (file: File) => {
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({}))
+    console.error("Cloudinary error:", JSON.stringify(err)) 
     throw new Error(err.error?.message || `Cloudinary upload failed (${res.status})`)
   }
 
