@@ -19,15 +19,15 @@ export default function Success() {
           esté revisado.
         </p>
 
-        <div className="border border-color-border bg-surface p-6 mb-12 text-left space-y-3">
+        {/*<div className="border border-color-border bg-surface p-6 mb-12 text-left space-y-3">
           <div className="flex items-center gap-3">
-            <span className="w-2 h-2 rounded-full bg-color-warning" />
+            <span className="w-2 h-2 rounded-full bg-primary-container" />
             <span className="font-caption-mono text-caption-mono text-on-surface-variant uppercase tracking-widest">
               Revisión de documentos
             </span>
           </div>
           <div className="flex items-center gap-3">
-            <span className="w-2 h-2 rounded-full bg-color-warning" />
+            <span className="w-2 h-2 rounded-full bg-primary-container" />
             <span className="font-caption-mono text-caption-mono text-on-surface-variant uppercase tracking-widest">
               Verificación de identidad
             </span>
