@@ -1,7 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom"
 import Home from "../app/LandingPage"
 import { LoginPage } from "../app/LoginPage"
-import { RegisterPage } from "@/app/RegisterPage"
 import Success from "@/pages/onboarding/Success"
 import TokenGate from "@/components/onboarding/TokenGate"
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute"
@@ -10,7 +9,6 @@ import AdminDashboard from "@/modules/admin/page/AdminDashboard"
 import PendingPage from "@/pages/admin/PendingPage"
 import ContractorsPage from "@/pages/admin/ContractorsPage"
 import SettingsPage from "@/pages/admin/SettingsPage"
-import InvitationRegister from "@/pages/auth/InvitationRegister"
 import SetPassword from "@/pages/auth/SetPassword"
 import WorkerLogin from "@/pages/worker/WorkerLogin"
 import WorkerLayout from "@/pages/worker/WorkerLayout"
@@ -38,17 +36,20 @@ function AppRouter() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Home />} />
+
+        {/* Auth routes */}
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="/onboarding/success" element={<Success />} />
-        <Route path="/onboarding/:token" element={<TokenGate />} />
-
-        <Route path="/register" element={<InvitationRegister />} />
-        <Route path="/set-password" element={<SetPassword />} />
-        <Route path="/convocatoria/:id/apply" element={<ConvocatoriaApplyPage />} />
         <Route path="/worker/login" element={<WorkerLogin />} />
+        <Route path="/set-password" element={<SetPassword />} />
 
-        {/* rutas del panel de trabajador */}
+        {/* Onboarding flow (main entry for invited users) */}
+        <Route path="/onboarding/:token" element={<TokenGate />} />
+        <Route path="/onboarding/success" element={<Success />} />
+
+        {/* Public routes */}
+        <Route path="/convocatoria/:id/apply" element={<ConvocatoriaApplyPage />} />
+
+        {/* Worker panel (admins + workers) */}
         <Route path="/worker" element={<WorkerLayout />}>
           <Route index element={<WorkerDashboard />} />
           <Route path="dashboard" element={<WorkerDashboard />} />
