@@ -1,5 +1,5 @@
 export type Contractor = {
-  id: number
+  id: string | number
   fullName: string
   email: string
   phone: string
