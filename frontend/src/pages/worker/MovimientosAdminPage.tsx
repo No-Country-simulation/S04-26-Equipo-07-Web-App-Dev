@@ -50,13 +50,13 @@ export default function MovimientosAdminPage() {
     <div className="p-8">
       <header className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
-          <h2 className="text-[28px] font-bold text-[#f0ffe4]">Movimientos_Usuarios</h2>
+          <h2 className="text-[28px] font-bold text-[#f0ffe4]">Movimientos Usuarios</h2>
           <p className="mt-1 font-mono text-[10px] uppercase tracking-wider text-[#baccaf]">
             <span className="text-[#42ff00]">{payments.length}</span> transacciones registradas
           </p>
         </div>
         <div className="border border-[#3c4b35] bg-[#182214] px-4 py-2 text-right">
-          <p className="font-mono text-[9px] uppercase tracking-wider text-[#3c4b35]">Total aceptado</p>
+          <p className="font-mono text-label-mono-bold uppercase tracking-wider text-[#3c4b35]">Total aceptado</p>
           <p className="font-mono text-[18px] font-bold text-[#42ff00]">{acceptedTotal.toFixed(2)} USD</p>
         </div>
       </header>
@@ -95,7 +95,7 @@ export default function MovimientosAdminPage() {
                         {user ? `${user.firstName} ${user.lastName}` : p.userId.slice(-8)}
                       </td>
                       <td className="px-5 py-4 font-mono text-[11px] text-[#baccaf]">{user?.email ?? '—'}</td>
-                      <td className="px-5 py-4 font-mono text-[12px] font-bold text-[#dae6d0]">${p.amount.toFixed(2)}</td>
+                      <td className="px-5 py-4 font-mono text-caption-mono font-bold text-[#dae6d0]">${p.amount.toFixed(2)}</td>
                       <td className="px-5 py-4">
                         <span className={`font-mono text-[10px] uppercase tracking-wider ${statusClass(p.status)}`}>
                           {p.status}
