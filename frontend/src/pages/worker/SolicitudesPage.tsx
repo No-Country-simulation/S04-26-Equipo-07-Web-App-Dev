@@ -68,6 +68,7 @@ function DetailPanel({ req, onClose }: { req: Request; onClose: () => void }) {
   const [flaggedDocs, setFlaggedDocs] = useState<Set<string>>(new Set())
   const [rejectTarget, setRejectTarget] = useState<{ type: 'info' | 'doc' | 'overall'; key: string } | null>(null)
   const [rejectNote, setRejectNote] = useState('')
+  const [mutError, setMutError] = useState<string | null>(null)
 
   const toggleSection = (key: string) => {
     setOpenSections(prev => {
@@ -82,20 +83,24 @@ function DetailPanel({ req, onClose }: { req: Request; onClose: () => void }) {
     mutationFn: ({ key, status, observation }: { key: string; status: string; observation?: string }) =>
       requestService.reviewDocument(req.id, key, { status, observation }),
     onSuccess: (_, vars) => {
+      setMutError(null)
       qc.invalidateQueries({ queryKey: ['requests'] })
       setDocReviews(prev => prev.map(d => d.documentKey === vars.key ? { ...d, status: vars.status } : d))
       setFlaggedDocs(prev => { const n = new Set(prev); n.delete(vars.key); return n })
     },
+    onError: (e: unknown) => setMutError(e instanceof Error ? e.message : 'Error al actualizar documento'),
   })
 
   const reviewInfoMut = useMutation({
     mutationFn: ({ field, status, observation }: { field: string; status: string; observation?: string }) =>
       requestService.reviewInformation(req.id, field, { status, observation }),
     onSuccess: (_, vars) => {
+      setMutError(null)
       qc.invalidateQueries({ queryKey: ['requests'] })
       setInfoReviews(prev => prev.map(r => r.field === vars.field ? { ...r, status: vars.status } : r))
       setFlaggedInfo(prev => { const n = new Set(prev); n.delete(vars.field); return n })
     },
+    onError: (e: unknown) => setMutError(e instanceof Error ? e.message : 'Error al actualizar campo'),
   })
 
   const approveMut = useMutation({
@@ -150,41 +155,47 @@ function DetailPanel({ req, onClose }: { req: Request; onClose: () => void }) {
   const pendingBusy = reviewDocMut.isPending || reviewInfoMut.isPending
 
   const itemActions = (type: 'info' | 'doc', key: string, status: string, flagged: boolean) => {
-    if (status !== 'PENDING') return null
     const onApprove = () => type === 'info'
       ? reviewInfoMut.mutate({ field: key, status: 'APPROVED' })
       : reviewDocMut.mutate({ key, status: 'APPROVED' })
+    const onReject = () => { setRejectTarget({ type, key }); setRejectNote('') }
     const onFlag = () => type === 'info'
       ? setFlaggedInfo(prev => { const n = new Set(prev); if (n.has(key)) n.delete(key); else n.add(key); return n })
       : setFlaggedDocs(prev => { const n = new Set(prev); if (n.has(key)) n.delete(key); else n.add(key); return n })
 
     return (
-      <div className="flex items-center gap-1.5 mt-2">
-        <button
-          onClick={onApprove}
-          disabled={pendingBusy}
-          className="border border-[#42ff00] px-2 py-0.5 font-mono text-[10px] text-[#42ff00] hover:bg-[#42ff00] hover:text-[#083900] disabled:opacity-50 transition-colors"
-        >
-          ✓ Aprobar
-        </button>
-        <button
-          onClick={() => { setRejectTarget({ type, key }); setRejectNote('') }}
-          disabled={pendingBusy}
-          className="border border-[#ffb4ab] px-2 py-0.5 font-mono text-[10px] text-[#ffb4ab] hover:bg-[#ffb4ab]/20 disabled:opacity-50 transition-colors"
-        >
-          ✗ Rechazar
-        </button>
-        <button
-          onClick={onFlag}
-          disabled={pendingBusy}
-          className={`border px-2 py-0.5 font-mono text-[10px] transition-colors disabled:opacity-50 ${
-            flagged
-              ? 'border-yellow-400 text-yellow-400 bg-yellow-400/10'
-              : 'border-[#3c4b35] text-[#baccaf] hover:border-yellow-400 hover:text-yellow-400'
-          }`}
-        >
-          🔖 {flagged ? 'Quitar' : 'Ver después'}
-        </button>
+      <div className="flex items-center flex-wrap gap-1.5 mt-2">
+        {status !== 'APPROVED' && (
+          <button
+            onClick={onApprove}
+            disabled={pendingBusy}
+            className="border border-[#42ff00] px-2 py-0.5 font-mono text-[10px] text-[#42ff00] hover:bg-[#42ff00] hover:text-[#083900] disabled:opacity-50 transition-colors"
+          >
+            ✓ Aprobar
+          </button>
+        )}
+        {status !== 'REJECTED' && (
+          <button
+            onClick={onReject}
+            disabled={pendingBusy}
+            className="border border-[#ffb4ab] px-2 py-0.5 font-mono text-[10px] text-[#ffb4ab] hover:bg-[#ffb4ab]/20 disabled:opacity-50 transition-colors"
+          >
+            ✗ Rechazar
+          </button>
+        )}
+        {status === 'PENDING' && (
+          <button
+            onClick={onFlag}
+            disabled={pendingBusy}
+            className={`border px-2 py-0.5 font-mono text-[10px] transition-colors disabled:opacity-50 ${
+              flagged
+                ? 'border-yellow-400 text-yellow-400 bg-yellow-400/10'
+                : 'border-[#3c4b35] text-[#baccaf] hover:border-yellow-400 hover:text-yellow-400'
+            }`}
+          >
+            🔖 {flagged ? 'Quitar' : 'Ver después'}
+          </button>
+        )}
       </div>
     )
   }
@@ -244,6 +255,14 @@ function DetailPanel({ req, onClose }: { req: Request; onClose: () => void }) {
         {/* Scrollable content */}
         <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-[#3c4b35]">
 
+          {/* Global mutation error */}
+          {mutError && (
+            <div className="flex items-center justify-between gap-3 border-b border-[#ffb4ab]/30 bg-[#1a0d0d] px-6 py-2">
+              <p className="font-mono text-[10px] text-[#ffb4ab]">{mutError}</p>
+              <button onClick={() => setMutError(null)} className="text-[#ffb4ab] hover:text-white"><X size={12} /></button>
+            </div>
+          )}
+
           {/* Inline rejection panel */}
           {rejectTarget && (
             <div className="border-b border-[#ffb4ab]/40 bg-[#1a0d0d] px-6 py-4">
@@ -298,6 +317,9 @@ function DetailPanel({ req, onClose }: { req: Request; onClose: () => void }) {
                               {FIELD_LABELS[info.field] ?? info.field}
                             </p>
                             <p className="font-mono text-[12px] text-[#dae6d0] mt-0.5 break-words">{info.value}</p>
+                            {info.observation && (
+                              <p className="font-mono text-[9px] text-[#ffb4ab] mt-0.5 italic">{info.observation}</p>
+                            )}
                           </div>
                           <div className="shrink-0">{statusBadge(info.status, isFlagged)}</div>
                         </div>
@@ -324,22 +346,41 @@ function DetailPanel({ req, onClose }: { req: Request; onClose: () => void }) {
                   {docReviews.map(doc => {
                     const isFlagged = flaggedDocs.has(doc.documentKey)
                     const url = doc.url ?? req.documentUrls?.[doc.documentKey]
+                    const isImage = url ? /\.(png|jpe?g|gif|webp|svg)$/i.test(url) || url.includes('/image/upload/') : false
                     return (
                       <div key={doc.documentKey} className="px-6 py-3">
                         <div className="flex items-start justify-between gap-4">
-                          <div className="min-w-0">
+                          <div className="min-w-0 flex-1">
                             <p className="font-mono text-[9px] uppercase tracking-widest text-[#3c4b35]">
                               {doc.name ?? doc.documentKey}
                             </p>
+                            {doc.fileName && (
+                              <p className="font-mono text-[9px] text-[#3c4b35] mt-0.5 truncate">{doc.fileName}</p>
+                            )}
                             {url && (
-                              <a
-                                href={url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1 mt-1 font-mono text-[10px] text-[#42ff00] hover:text-[#a0ff80] transition-colors"
-                              >
-                                <ExternalLink size={10} /> Ver documento
-                              </a>
+                              <div className="mt-2 space-y-2">
+                                {isImage && (
+                                  <a href={url} target="_blank" rel="noopener noreferrer">
+                                    <img
+                                      src={url}
+                                      alt={doc.name ?? doc.documentKey}
+                                      className="h-20 w-28 object-cover border border-[#3c4b35] hover:border-[#42ff00] transition-colors"
+                                      onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }}
+                                    />
+                                  </a>
+                                )}
+                                <a
+                                  href={url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 font-mono text-[10px] text-[#42ff00] hover:text-[#a0ff80] transition-colors"
+                                >
+                                  <ExternalLink size={10} /> Ver documento
+                                </a>
+                              </div>
+                            )}
+                            {doc.observation && (
+                              <p className="font-mono text-[9px] text-[#ffb4ab] mt-1 italic">{doc.observation}</p>
                             )}
                           </div>
                           <div className="shrink-0">{statusBadge(doc.status, isFlagged)}</div>
@@ -348,19 +389,34 @@ function DetailPanel({ req, onClose }: { req: Request; onClose: () => void }) {
                       </div>
                     )
                   })}
-                  {extraDocUrls.map(([key, url]) => (
-                    <div key={key} className="px-6 py-3">
-                      <p className="font-mono text-[9px] uppercase tracking-widest text-[#3c4b35] capitalize">{key}</p>
-                      <a
-                        href={url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 mt-1 font-mono text-[10px] text-[#42ff00] hover:text-[#a0ff80] transition-colors"
-                      >
-                        <ExternalLink size={10} /> Ver documento
-                      </a>
-                    </div>
-                  ))}
+                  {extraDocUrls.map(([key, url]) => {
+                    const isImage = /\.(png|jpe?g|gif|webp|svg)$/i.test(url) || url.includes('/image/upload/')
+                    return (
+                      <div key={key} className="px-6 py-3">
+                        <p className="font-mono text-[9px] uppercase tracking-widest text-[#3c4b35] capitalize">{key}</p>
+                        <div className="mt-2 space-y-2">
+                          {isImage && (
+                            <a href={url} target="_blank" rel="noopener noreferrer">
+                              <img
+                                src={url}
+                                alt={key}
+                                className="h-20 w-28 object-cover border border-[#3c4b35] hover:border-[#42ff00] transition-colors"
+                                onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }}
+                              />
+                            </a>
+                          )}
+                          <a
+                            href={url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 font-mono text-[10px] text-[#42ff00] hover:text-[#a0ff80] transition-colors"
+                          >
+                            <ExternalLink size={10} /> Ver documento
+                          </a>
+                        </div>
+                      </div>
+                    )
+                  })}
                 </div>
               )}
             </div>
@@ -509,7 +565,7 @@ const FILTERS = [
 export default function SolicitudesPage() {
   const qc = useQueryClient()
   const [filter, setFilter] = useState('')
-  const [selected, setSelected] = useState<Request | null>(null)
+  const [selectedId, setSelectedId] = useState<string | null>(null)
 
   const { data: requests = [], isLoading } = useQuery<Request[]>({
     queryKey: ['requests', filter],
@@ -520,6 +576,8 @@ export default function SolicitudesPage() {
     mutationFn: (id: string) => requestService.assign(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['requests'] }),
   })
+
+  const selected = selectedId ? (requests.find(r => r.id === selectedId) ?? null) : null
 
   useEffect(() => {
     let client: Client
@@ -595,7 +653,10 @@ export default function SolicitudesPage() {
                     <td className="px-5 py-4">
                       <p className="font-mono text-[11px] font-bold text-[#dae6d0]">#{r.id.slice(-8).toUpperCase()}</p>
                     </td>
-                    <td className="px-5 py-4 font-mono text-[11px] text-[#baccaf]">{r.userId.slice(-12)}</td>
+                    <td className="px-5 py-4">
+                      <p className="font-mono text-[11px] text-[#dae6d0]">{r.fullName ?? '—'}</p>
+                      <p className="font-mono text-[9px] text-[#3c4b35] mt-0.5 truncate max-w-[160px]">{r.email ?? r.userId.slice(-12)}</p>
+                    </td>
                     <td className="px-5 py-4">
                       <span className={`border px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider ${STATUS_COLORS[r.status] ?? 'border-[#3c4b35] text-[#baccaf]'}`}>
                         {STATUS_LABELS[r.status] ?? r.status}
@@ -606,8 +667,10 @@ export default function SolicitudesPage() {
                         {docsOk}/{docsTotal}
                       </span>
                     </td>
-                    <td className="px-5 py-4 font-mono text-[11px] text-[#baccaf]">
-                      {r.assignedWorkerId ? r.assignedWorkerId.slice(-8) : '—'}
+                    <td className="px-5 py-4">
+                      {r.assignedWorkerId
+                        ? <p className="font-mono text-[10px] text-[#baccaf]" title={r.assignedWorkerId}>{r.assignedWorkerId.slice(-10)}</p>
+                        : <span className="font-mono text-[10px] text-[#3c4b35]">—</span>}
                     </td>
                     <td className="px-5 py-4 font-mono text-[10px] text-[#baccaf]">
                       {new Date(r.createdAt).toLocaleDateString('es-AR')}
@@ -623,7 +686,7 @@ export default function SolicitudesPage() {
                         </button>
                       ) : (
                         <button
-                          onClick={() => setSelected(r)}
+                          onClick={() => setSelectedId(r.id)}
                           className="border border-[#3c4b35] px-3 py-1 font-mono text-[10px] uppercase tracking-wider text-[#baccaf] hover:border-[#42ff00] hover:text-[#42ff00]"
                         >
                           <Eye className="mr-1 inline" size={12} />
@@ -639,7 +702,7 @@ export default function SolicitudesPage() {
         </div>
       </div>
 
-      {selected && <DetailPanel req={selected} onClose={() => setSelected(null)} />}
+      {selected && <DetailPanel req={selected} onClose={() => setSelectedId(null)} />}
     </div>
   )
 }
