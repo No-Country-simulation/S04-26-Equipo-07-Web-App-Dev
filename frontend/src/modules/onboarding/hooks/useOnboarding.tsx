@@ -56,12 +56,20 @@ export function OnboardingProvider({
   children,
   prefilledData,
   initialToken = "",
+  initialEmail = "",
 }: {
   children: ReactNode
   prefilledData?: Partial<OnboardingData>
   initialToken?: string
+  initialEmail?: string
 }) {
-  const computedInitialData = useMemo(() => mergeInitialData(prefilledData), [])
+  const computedInitialData = useMemo(() => {
+    const base = mergeInitialData(prefilledData)
+    if (initialEmail) {
+      base.personalInfo.email = initialEmail
+    }
+    return base
+  }, [prefilledData, initialEmail])
 
   const [currentStep, setCurrentStep] = useState<number>(() => {
     try {

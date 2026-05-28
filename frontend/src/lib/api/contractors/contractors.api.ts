@@ -53,8 +53,8 @@ export async function fetchContractors(): Promise<Contractor[]> {
 }
 
 export async function updateContractorStatus(
-  id: string,
+  id: string | number,
   status: 'pending' | 'approved' | 'rejected',
 ): Promise<void> {
-  await apiClient.put(API.contractors.status(id), { status })
+  await apiClient.put(API.contractors.status(String(id)), { status })
 }

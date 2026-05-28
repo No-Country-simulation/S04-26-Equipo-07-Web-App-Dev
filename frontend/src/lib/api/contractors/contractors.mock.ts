@@ -128,7 +128,7 @@ export function fetchContractors(): Promise<Contractor[]> {
 }
 
 export function updateContractorStatus(
-  id: number,
+  id: string | number,
   status: "pending" | "approved" | "rejected"
 ): Promise<void> {
   stored = stored.map((c) => (c.id === id ? { ...c, status } : c))
